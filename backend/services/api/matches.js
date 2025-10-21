@@ -4,7 +4,7 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 
-const FOOTBALL_API_KEY = process.env.FOOTBALL_API_KEY;
+const FOOTBALL_API_KEY = process.env.RAPID_API_KEY;
 const FOOTBALL_BASE_API_URL = process.env.FOOTBALL_BASE_API_URL;
 
 export const fetchLeagues = async () => {
