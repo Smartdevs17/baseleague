@@ -10,6 +10,7 @@ contract DeployScript is Script {
 
     function run() public {
         uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
+        uint16 platformFeeBps = uint16(vm.envOr("PLATFORM_FEE_BPS", uint256(0)));
         vm.startBroadcast(deployerPrivateKey);
 
         // Deploy BleagToken
@@ -17,7 +18,7 @@ contract DeployScript is Script {
         console.log("BleagToken deployed at:", address(bleagToken));
 
         // Deploy MatchManager
-        MatchManager matchManager = new MatchManager(address(bleagToken));
+        MatchManager matchManager = new MatchManager(address(bleagToken), platformFeeBps);
         console.log("MatchManager deployed at:", address(matchManager));
 
         vm.stopBroadcast();

@@ -26,6 +26,8 @@ contract MatchManager is Ownable {
 
     // State variables
     IERC20 public immutable bleagToken;
+    uint16 public platformFeeBps; // fee in basis points (1% = 100 bps)
+    uint16 public constant MAX_BPS = 10_000;
     uint256 public nextMatchId = 1;
     mapping(uint256 => Match) public matches;
     mapping(address => uint256[]) public userMatches;
@@ -34,9 +36,12 @@ contract MatchManager is Ownable {
     event MatchCreated(uint256 indexed matchId, address indexed creator, uint256 stake, uint256 fixtureId);
     event MatchJoined(uint256 indexed matchId, address indexed joiner);
     event MatchSettled(uint256 indexed matchId, address indexed winner, uint256 reward);
+    event PlatformFeeUpdated(uint16 oldFeeBps, uint16 newFeeBps);
 
-    constructor(address _bleagToken) Ownable(msg.sender) {
+    constructor(address _bleagToken, uint16 _platformFeeBps) Ownable(msg.sender) {
+        require(_platformFeeBps <= MAX_BPS, "Fee too high");
         bleagToken = IERC20(_bleagToken);
+        platformFeeBps = _platformFeeBps;
     }
 
     /**
@@ -129,13 +134,18 @@ contract MatchManager is Ownable {
         match_.settled = true;
         match_.winner = winner;
 
-        // Calculate reward (2x stake for winner)
+        // Calculate reward (2x stake), fee, and net amount
         uint256 reward = match_.stake * 2;
-        
-        // Transfer reward to winner
-        bleagToken.safeTransfer(winner, reward);
+        uint256 fee = (reward * platformFeeBps) / MAX_BPS;
+        uint256 net = reward - fee;
 
-        emit MatchSettled(matchId, winner, reward);
+        // Transfer fee to owner and net reward to winner
+        if (fee > 0) {
+            bleagToken.safeTransfer(owner(), fee);
+        }
+        bleagToken.safeTransfer(winner, net);
+
+        emit MatchSettled(matchId, winner, net);
     }
 
     /**
@@ -144,5 +154,16 @@ contract MatchManager is Ownable {
      */
     function emergencyWithdraw(uint256 amount) external onlyOwner {
         bleagToken.safeTransfer(owner(), amount);
+    }
+
+    /**
+     * @dev Update platform fee (only owner)
+     * @param _platformFeeBps New fee in basis points
+     */
+    function setPlatformFeeBps(uint16 _platformFeeBps) external onlyOwner {
+        require(_platformFeeBps <= MAX_BPS, "Fee too high");
+        uint16 old = platformFeeBps;
+        platformFeeBps = _platformFeeBps;
+        emit PlatformFeeUpdated(old, _platformFeeBps);
     }
 }

@@ -21,7 +21,8 @@ contract MatchManagerTest is Test {
         
         // Deploy contracts
         bleagToken = new BleagToken();
-        matchManager = new MatchManager(address(bleagToken));
+        // default 0 bps fee for existing tests
+        matchManager = new MatchManager(address(bleagToken), 0);
         
         // Give users some tokens
         bleagToken.transfer(user1, 10000 * 10**18);
@@ -99,8 +100,55 @@ contract MatchManagerTest is Test {
         assertEq(match_.settled, true);
         assertEq(match_.winner, user1);
         
-        // Check that user1 received the reward (2x stake)
+        // Check that user1 received the reward (2x stake) with 0 fee
         assertEq(bleagToken.balanceOf(user1), 10000 * 10**18 + stake);
+    }
+
+    function testSettleMatchWithFee() public {
+        // Deploy a new manager with 500 bps (5%) fee
+        matchManager = new MatchManager(address(bleagToken), 500);
+
+        // Re-approve for new manager
+        vm.prank(user1);
+        bleagToken.approve(address(matchManager), type(uint256).max);
+        vm.prank(user2);
+        bleagToken.approve(address(matchManager), type(uint256).max);
+
+        uint256 stake = 100 * 10**18;
+        uint256 fixtureId = 12345;
+        uint8 prediction1 = 1;
+        uint8 prediction2 = 2;
+
+        vm.prank(user1);
+        uint256 matchId = matchManager.createMatch(stake, fixtureId, prediction1);
+
+        vm.prank(user2);
+        matchManager.joinMatch(matchId, prediction2);
+
+        uint256 ownerBalBefore = bleagToken.balanceOf(owner);
+
+        matchManager.settleMatch(matchId, user1);
+
+        // reward = 200, fee=5% => 10, net=190
+        uint256 expectedWinnerGain = 190 * 10**18;
+        uint256 expectedOwnerGain = 10 * 10**18;
+
+        // User1 balance: 10000e18 - stake + net
+        assertEq(bleagToken.balanceOf(user1), 10000 * 10**18 - (100 * 10**18) + expectedWinnerGain);
+        // Owner receives fee
+        assertEq(bleagToken.balanceOf(owner) - ownerBalBefore, expectedOwnerGain);
+    }
+
+    function testOwnerCanUpdateFee() public {
+        matchManager = new MatchManager(address(bleagToken), 0);
+        vm.prank(user1);
+        bleagToken.approve(address(matchManager), type(uint256).max);
+        vm.prank(user2);
+        bleagToken.approve(address(matchManager), type(uint256).max);
+
+        // Update fee to 0.5%
+        matchManager.setPlatformFeeBps(50);
+        assertEq(matchManager.platformFeeBps(), 50);
     }
 
     function testGetUserMatches() public {
