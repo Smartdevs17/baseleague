@@ -1,5 +1,6 @@
 import Bet from '../models/Bet.js'
 import Fixture from '../models/Fixture.js'
+import User from '../models/User.js'
 
 /**
  * Betting Service
@@ -12,11 +13,11 @@ export class BettingService {
    * @returns {Object} Created bet or error
    */
   static async createBet(betData) {
-    const { userId, fixtureId, teamId, teamName, outcome, amount } = betData
+    const { userId, walletAddress, fixtureId, teamId, teamName, outcome, amount } = betData
 
     try {
       // Validate required fields
-      if (!userId || !fixtureId || !teamId || !outcome || !amount) {
+      if (!userId || !walletAddress || !fixtureId || !teamId || !outcome || !amount) {
         return { error: 'Missing required fields' }
       }
 
@@ -41,7 +42,12 @@ export class BettingService {
       }
 
       // Check if user already has a bet on this fixture (hedging prevention)
-      const existingBet = await Bet.findOne({ userId, fixtureId })
+      const existingBet = await Bet.findOne({ 
+        $or: [
+          { userId, fixtureId },
+          { walletAddress: walletAddress.toLowerCase(), fixtureId }
+        ]
+      })
       if (existingBet) {
         return { error: 'You can only place one bet per fixture to prevent hedging' }
       }
@@ -49,6 +55,7 @@ export class BettingService {
       // Create bet
       const bet = new Bet({
         userId,
+        walletAddress: walletAddress.toLowerCase(),
         fixtureId,
         teamId,
         teamName,
@@ -80,6 +87,23 @@ export class BettingService {
       return bets.map(bet => bet.toJSON())
     } catch (error) {
       console.error('Error fetching user bets:', error)
+      return []
+    }
+  }
+
+  /**
+   * Get all bets for a user by wallet address
+   * @param {string} walletAddress - Wallet address
+   * @returns {Array} User's bets
+   */
+  static async getUserBetsByWallet(walletAddress) {
+    try {
+      const bets = await Bet.find({ 
+        walletAddress: walletAddress.toLowerCase() 
+      }).sort({ createdAt: -1 })
+      return bets.map(bet => bet.toJSON())
+    } catch (error) {
+      console.error('Error fetching user bets by wallet:', error)
       return []
     }
   }
@@ -181,18 +205,32 @@ export class BettingService {
       const totalWinningAmount = winningBets.reduce((sum, bet) => sum + bet.amount, 0)
       const payoutMultiplier = totalWinningAmount > 0 ? (payoutInfo.totalPayout / totalWinningAmount) : 0
 
-      // Update winning bets
+      // Update winning bets and user stats
       for (const bet of winningBets) {
         bet.status = 'won'
         bet.payout = bet.amount * payoutMultiplier
         await bet.save()
+
+        // Update user betting stats
+        const user = await User.findById(bet.userId)
+        if (user) {
+          user.updateBettingStats('won', bet.amount, bet.payout)
+          await user.save()
+        }
       }
 
-      // Update losing bets
+      // Update losing bets and user stats
       for (const bet of losingBets) {
         bet.status = 'lost'
         bet.payout = 0
         await bet.save()
+
+        // Update user betting stats
+        const user = await User.findById(bet.userId)
+        if (user) {
+          user.updateBettingStats('lost', bet.amount, 0)
+          await user.save()
+        }
       }
 
       // Mark payout as processed

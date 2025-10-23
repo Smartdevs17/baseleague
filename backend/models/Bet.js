@@ -6,6 +6,12 @@ const betSchema = new mongoose.Schema({
     required: true,
     index: true
   },
+  walletAddress: {
+    type: String,
+    required: true,
+    index: true,
+    lowercase: true
+  },
   fixtureId: {
     type: String,
     required: true,
@@ -46,6 +52,7 @@ const betSchema = new mongoose.Schema({
 
 // Compound index to prevent hedging (one bet per user per fixture)
 betSchema.index({ userId: 1, fixtureId: 1 }, { unique: true })
+betSchema.index({ walletAddress: 1, fixtureId: 1 }, { unique: true })
 
 // Virtual for bet ID
 betSchema.virtual('id').get(function() {

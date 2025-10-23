@@ -1,5 +1,6 @@
 import { BettingService } from '../services/bettingService.js'
 import { fetchFixtures, fetchPlayers, getTeamsFromPlayers, processFixtures } from '../services/api/premierLeague.js'
+import { AuthMiddleware } from '../middleware/auth.js'
 
 /**
  * Betting Controller
@@ -39,14 +40,16 @@ export class BettingController {
   }
 
   /**
-   * Place a new bet
+   * Place a new bet (requires authentication)
    */
   static async createBet(req, res) {
     try {
-      const { userId, fixtureId, teamId, teamName, outcome, amount } = req.body
+      const user = req.user
+      const { fixtureId, teamId, teamName, outcome, amount } = req.body
       
       const result = await BettingService.createBet({
-        userId,
+        userId: user.id,
+        walletAddress: user.walletAddress,
         fixtureId,
         teamId,
         teamName,
@@ -66,16 +69,31 @@ export class BettingController {
   }
 
   /**
-   * Get all bets for a specific user
+   * Get all bets for authenticated user
    */
   static async getUserBets(req, res) {
     try {
-      const { userId } = req.params
-      const userBets = await BettingService.getUserBets(userId)
+      const user = req.user
+      const userBets = await BettingService.getUserBets(user.id)
       
       res.json({ success: true, bets: userBets })
     } catch (error) {
       console.error('Error fetching user bets:', error.message)
+      res.status(500).json({ error: 'Failed to fetch user bets' })
+    }
+  }
+
+  /**
+   * Get all bets for a specific user by wallet address (public)
+   */
+  static async getUserBetsByWallet(req, res) {
+    try {
+      const { walletAddress } = req.params
+      const userBets = await BettingService.getUserBetsByWallet(walletAddress)
+      
+      res.json({ success: true, bets: userBets })
+    } catch (error) {
+      console.error('Error fetching user bets by wallet:', error.message)
       res.status(500).json({ error: 'Failed to fetch user bets' })
     }
   }

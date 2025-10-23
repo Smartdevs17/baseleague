@@ -2,6 +2,12 @@
 
 A Node.js/Express backend API for the BaseLeague application.
 
+## 📚 API Documentation
+
+**Postman Collection**: [View API Documentation](https://documenter.getpostman.com/view/21732859/2sB3WjxiGx)
+
+The complete API documentation with examples, authentication flows, and testing scenarios is available in our Postman workspace.
+
 ## Local Development
 
 1. Install dependencies:
@@ -148,6 +154,34 @@ The backend integrates with the free Fantasy Premier League API:
 - ✅ **Team information** - Complete team and player data
 - ✅ **Gameweek support** - Filter by specific gameweeks
 
+### User Management System
+
+The BaseLeague backend includes a comprehensive user management system with wallet-based authentication:
+
+#### Key Features
+- 🔐 **Wallet-based Authentication** - No passwords required, uses Ethereum signatures
+- 👤 **User Profiles** - Customizable usernames, display names, and avatars
+- 📊 **Betting Statistics** - Automatic tracking of betting performance
+- 🏆 **Leaderboards** - Competitive rankings based on winnings
+- 🔍 **User Search** - Find users by username or display name
+- 🛡️ **Security** - Signature verification prevents impersonation
+
+#### Authentication Headers
+For authenticated requests, include these headers:
+```
+walletAddress: 0x742d35Cc6634C0532925a3b8D4C9db96C4b4d8b6
+signature: 0x1234...abcd
+message: BaseLeague Authentication\n\nWallet: 0x...\nNonce: ...\nTimestamp: ...
+```
+
+#### User Data Model
+- **Wallet Address** - Unique identifier (Ethereum address)
+- **Username** - Unique display name (3-20 characters)
+- **Display Name** - Public display name (max 50 characters)
+- **Avatar** - Profile image URL
+- **Betting Stats** - Total bets, wins, losses, winnings, win rate
+- **Preferences** - Notification settings, theme preferences
+
 ### API Endpoints
 
 #### General
@@ -155,21 +189,42 @@ The backend integrates with the free Fantasy Premier League API:
 - `GET /health` - Health check
 - `GET /api/leagues` - Fetch leagues data
 
+#### User Management & Authentication
+- `POST /api/users/auth-challenge` - Get authentication challenge for wallet connection
+- `POST /api/users/verify-signature` - Verify wallet signature and authenticate user
+- `GET /api/users/profile` - Get authenticated user's profile (requires auth)
+- `PUT /api/users/profile` - Update user profile (requires auth)
+- `GET /api/users/wallet/:address` - Get user profile by wallet address (public)
+- `GET /api/users/betting-stats` - Get user betting statistics (requires auth)
+- `GET /api/users/leaderboard` - Get leaderboard of top users
+- `GET /api/users/search` - Search users by username or display name
+- `DELETE /api/users/account` - Deactivate user account (requires auth)
+
 #### Betting System
 - `GET /api/betting/fixtures` - Get all available fixtures for betting
 - `GET /api/betting/fixtures/:id` - Get specific fixture with betting pools
-- `POST /api/betting/bet` - Place a new bet
-- `GET /api/betting/user/:userId/bets` - Get all bets for a specific user
+- `POST /api/betting/bet` - Place a new bet (requires authentication)
+- `GET /api/betting/my-bets` - Get authenticated user's bets (requires auth)
+- `GET /api/betting/user/:address/bets` - Get user bets by wallet address (public)
 - `POST /api/betting/sync-fixtures` - Sync fixtures from Premier League API
 - `POST /api/betting/fixtures/:id/result` - Update fixture result and process payouts
 - `GET /api/betting/stats` - Get betting statistics
 
+#### Authentication Flow
+1. **Connect Wallet**: User connects their Ethereum wallet
+2. **Get Auth Challenge**: `POST /api/users/auth-challenge` - Get message to sign
+3. **Sign Message**: User signs the message with their wallet
+4. **Verify Signature**: `POST /api/users/verify-signature` - Authenticate user
+5. **Access Protected Endpoints**: Use authenticated endpoints with wallet headers
+
 #### Betting Flow
 1. **Sync Fixtures**: `POST /api/betting/sync-fixtures` - Load fixtures from Premier League API
 2. **View Fixtures**: `GET /api/betting/fixtures` - See available matches
-3. **Place Bet**: `POST /api/betting/bet` - Bet on match outcome
-4. **Update Result**: `POST /api/betting/fixtures/:id/result` - Set match result
-5. **View Stats**: `GET /api/betting/stats` - See betting statistics
+3. **Authenticate**: Complete wallet authentication flow
+4. **Place Bet**: `POST /api/betting/bet` - Bet on match outcome (requires auth)
+5. **View My Bets**: `GET /api/betting/my-bets` - See your betting history
+6. **Update Result**: `POST /api/betting/fixtures/:id/result` - Set match result
+7. **View Stats**: `GET /api/betting/stats` - See betting statistics
 
 ### Local Testing
 

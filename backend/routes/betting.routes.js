@@ -1,5 +1,6 @@
 import { Router } from 'express'
 import { BettingController } from '../controllers/bettingController.js'
+import { AuthMiddleware } from '../middleware/auth.js'
 
 const router = Router()
 
@@ -17,15 +18,21 @@ router.get('/fixtures/:id', BettingController.getFixture)
 
 /**
  * POST /api/betting/bet
- * Place a new bet
+ * Place a new bet (requires authentication)
  */
-router.post('/bet', BettingController.createBet)
+router.post('/bet', AuthMiddleware.verifyWalletAuth, BettingController.createBet)
 
 /**
- * GET /api/betting/user/:userId/bets
- * Get all bets for a specific user
+ * GET /api/betting/my-bets
+ * Get all bets for authenticated user
  */
-router.get('/user/:userId/bets', BettingController.getUserBets)
+router.get('/my-bets', AuthMiddleware.verifyWalletAuth, BettingController.getUserBets)
+
+/**
+ * GET /api/betting/user/:walletAddress/bets
+ * Get all bets for a specific user by wallet address (public)
+ */
+router.get('/user/:walletAddress/bets', BettingController.getUserBetsByWallet)
 
 /**
  * POST /api/betting/sync-fixtures
