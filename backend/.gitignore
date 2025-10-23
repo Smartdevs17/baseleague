@@ -1,2 +1,9 @@
 node_modules
 .env
+test-signature.js
+debug-auth.js
+generate-signature.js
+postman-auth-helper.js
+postman-collection-script.js
+*.log
+.DS_Store
