@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import MatchCard from '@/components/MatchCard';
@@ -9,63 +9,48 @@ import { Input } from '@/components/ui/input';
 import { Search, Plus, TrendingUp } from 'lucide-react';
 import { Match, PredictionType } from '@/types/match';
 import { toast } from 'sonner';
-
-// Mock data - replace with actual contract calls
-const mockMatches: Match[] = [
-  {
-    id: '1',
-    creator: '0x1234567890123456789012345678901234567890',
-    stake: '50000000000000000000',
-    fixtureId: 12345,
-    fixture: {
-      id: 12345,
-      date: '2025-10-22T19:00:00Z',
-      homeTeam: 'Manchester United',
-      awayTeam: 'Liverpool',
-      homeTeamLogo: 'https://media.api-sports.io/football/teams/33.png',
-      awayTeamLogo: 'https://media.api-sports.io/football/teams/40.png',
-      status: 'upcoming',
-      league: 'Premier League',
-    },
-    creatorPrediction: 'home',
-    settled: false,
-    status: 'open',
-    createdAt: Date.now(),
-  },
-  {
-    id: '2',
-    creator: '0xabcdefabcdefabcdefabcdefabcdefabcdefabcd',
-    joiner: '0x9876543210987654321098765432109876543210',
-    stake: '100000000000000000000',
-    fixtureId: 12346,
-    fixture: {
-      id: 12346,
-      date: '2025-10-23T20:00:00Z',
-      homeTeam: 'Barcelona',
-      awayTeam: 'Real Madrid',
-      homeTeamLogo: 'https://media.api-sports.io/football/teams/529.png',
-      awayTeamLogo: 'https://media.api-sports.io/football/teams/541.png',
-      status: 'upcoming',
-      league: 'La Liga',
-    },
-    creatorPrediction: 'home',
-    joinerPrediction: 'away',
-    settled: false,
-    status: 'active',
-    createdAt: Date.now() - 3600000,
-  },
-];
+import { useFixtures, useFilteredFixtures, useSyncFixtures } from '@/hooks/useFixtures';
+import { ApiFixture } from '@/store/fixtures';
 
 const Dashboard = () => {
   const navigate = useNavigate();
-  const [matches] = useState<Match[]>(mockMatches);
+  const { fixtures, loading, error, refetch } = useFixtures();
+  const { fixtures: filteredFixtures, updateFilters } = useFilteredFixtures();
+  const syncFixturesMutation = useSyncFixtures();
+  
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedMatch, setSelectedMatch] = useState<Match | null>(null);
   const [joinModalOpen, setJoinModalOpen] = useState(false);
 
+  // Handle search
+  useEffect(() => {
+    updateFilters({ searchQuery });
+  }, [searchQuery, updateFilters]);
+
   const handleJoinClick = (matchId: string) => {
-    const match = matches.find((m) => m.id === matchId);
-    if (match) {
+    // Convert fixture to match format for the modal
+    const fixture = fixtures.find((f) => f.id === matchId);
+    if (fixture) {
+      const match: Match = {
+        id: fixture.id,
+        creator: '0x0000000000000000000000000000000000000000',
+        stake: '0',
+        fixtureId: parseInt(fixture.externalId),
+        fixture: {
+          id: parseInt(fixture.externalId),
+          date: fixture.kickoffTime,
+          homeTeam: fixture.homeTeam,
+          awayTeam: fixture.awayTeam,
+          homeTeamLogo: '',
+          awayTeamLogo: '',
+          status: fixture.status === 'pending' ? 'upcoming' : fixture.status as 'upcoming' | 'live' | 'finished',
+          league: 'Premier League',
+        },
+        creatorPrediction: 'home',
+        settled: false,
+        status: fixture.status === 'pending' ? 'open' : 'active',
+        createdAt: Date.now(),
+      };
       setSelectedMatch(match);
       setJoinModalOpen(true);
     }
@@ -78,12 +63,59 @@ const Dashboard = () => {
     });
   };
 
+  const handleSyncFixtures = async () => {
+    try {
+      await syncFixturesMutation.mutateAsync();
+    } catch (error) {
+      // Error is handled by the mutation
+    }
+  };
+
+  // Convert fixtures to matches format for the original UI
+  const matches: Match[] = fixtures.map(fixture => ({
+    id: fixture.id,
+    creator: '0x0000000000000000000000000000000000000000',
+    stake: fixture.totalPoolSize.toString(),
+    fixtureId: parseInt(fixture.externalId),
+    fixture: {
+      id: parseInt(fixture.externalId),
+      date: fixture.kickoffTime,
+      homeTeam: fixture.homeTeam,
+      awayTeam: fixture.awayTeam,
+      homeTeamLogo: '',
+      awayTeamLogo: '',
+      status: fixture.status === 'pending' ? 'upcoming' : fixture.status as 'upcoming' | 'live' | 'finished',
+      league: 'Premier League',
+    },
+    creatorPrediction: 'home',
+    settled: fixture.status === 'finished',
+    status: fixture.status === 'pending' ? 'open' : fixture.status === 'live' ? 'active' : 'completed',
+    createdAt: new Date(fixture.createdAt).getTime(),
+  }));
+
   const filteredMatches = matches.filter(
     (match) =>
       match.fixture.homeTeam.toLowerCase().includes(searchQuery.toLowerCase()) ||
       match.fixture.awayTeam.toLowerCase().includes(searchQuery.toLowerCase()) ||
       match.fixture.league.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navbar />
+        <div className="container mx-auto px-4 py-8">
+          <div className="text-center py-12">
+            <h3 className="text-lg font-semibold text-foreground mb-2">Failed to load fixtures</h3>
+            <p className="text-muted-foreground mb-4">{error}</p>
+            <Button onClick={() => refetch()}>
+              Retry
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -117,6 +149,15 @@ const Dashboard = () => {
                 <TrendingUp className="w-5 h-5 mr-2" />
                 Leaderboard
               </Button>
+              <Button
+                onClick={handleSyncFixtures}
+                disabled={syncFixturesMutation.isPending}
+                size="lg"
+                variant="outline"
+                className="border-white text-white hover:bg-white/10"
+              >
+                {syncFixturesMutation.isPending ? 'Syncing...' : 'Sync Fixtures'}
+              </Button>
             </div>
           </div>
         </div>
@@ -143,7 +184,11 @@ const Dashboard = () => {
           </TabsList>
 
           <TabsContent value="open" className="space-y-4">
-            {filteredMatches.filter((m) => m.status === 'open').length === 0 ? (
+            {loading ? (
+              <div className="text-center py-12 text-muted-foreground">
+                Loading fixtures...
+              </div>
+            ) : filteredMatches.filter((m) => m.status === 'open').length === 0 ? (
               <div className="text-center py-12 text-muted-foreground">
                 No open matches available. Create one to get started!
               </div>
