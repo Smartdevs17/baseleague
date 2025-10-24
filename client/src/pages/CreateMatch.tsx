@@ -76,7 +76,28 @@ const CreateMatch = () => {
                                prediction === 'draw' ? Prediction.DRAW : 
                                Prediction.AWAY;
 
-      // Create match using smart contract
+      // Step 1: Check current allowance
+      const currentAllowance = allowance ? BigInt(allowance.toString()) : 0n;
+      
+      // Step 2: If allowance is insufficient, approve first
+      if (currentAllowance < stakeAmount) {
+        toast.info('Approving tokens for match creation...');
+        
+        try {
+          await approve(stakeAmount);
+          toast.success('Tokens approved successfully!');
+          
+          // Wait a moment for the approval transaction to be mined
+          await new Promise(resolve => setTimeout(resolve, 3000));
+        } catch (approveError) {
+          console.error('Failed to approve tokens:', approveError);
+          toast.error('Failed to approve tokens. Please try again.');
+          return;
+        }
+      }
+
+      // Step 3: Create the match
+      toast.info('Creating match...');
       await createMatch(selectedFixture.externalId, contractPrediction, stakeAmount);
       
       toast.success('Match created successfully!', {
@@ -86,9 +107,18 @@ const CreateMatch = () => {
       setTimeout(() => {
         navigate('/my-matches');
       }, 1500);
+      
     } catch (error) {
       console.error('Failed to create match:', error);
-      toast.error('Failed to create match. Please try again.');
+      
+      // More specific error messages
+      if (error.message?.includes('dropped') || error.message?.includes('replaced')) {
+        toast.error('Transaction was dropped. Please try again with higher gas or wait for network congestion to clear.');
+      } else if (error.message?.includes('insufficient')) {
+        toast.error('Insufficient funds or gas. Please check your balance and try again.');
+      } else {
+        toast.error('Failed to create match. Please try again.');
+      }
     }
   };
 

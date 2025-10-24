@@ -130,6 +130,9 @@ export const useMatch = (matchId: number) => {
   };
 };
 
+// Note: For fetching multiple matches data, you'd need to use individual useContractRead hooks
+// or implement a custom solution that doesn't violate the rules of hooks
+
 // Hook for transaction status using wagmi v2 API
 export const useTransactionStatus = (hash: `0x${string}` | undefined) => {
   const { data: receipt, isLoading, error } = useWaitForTransactionReceipt({

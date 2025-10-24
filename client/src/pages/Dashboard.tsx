@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAccount } from 'wagmi';
 import Navbar from '@/components/Navbar';
@@ -11,7 +11,8 @@ import { Search, Plus, TrendingUp, Wallet } from 'lucide-react';
 import { Match, PredictionType } from '@/types/match';
 import { toast } from 'sonner';
 import { useMatches, useToken, useMatch } from '@/hooks/useContracts';
-import { Prediction, MatchStatus } from '@/lib/contracts';
+import { useOpenMatchesWithFixtures } from '@/hooks/useOpenMatchesWithFixtures';
+import { Prediction } from '@/lib/contracts';
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -19,44 +20,16 @@ const Dashboard = () => {
   
   // Smart contract hooks
   const { balance, allowance, approve, isApproving } = useToken();
-  const { openMatches, activeMatches, completedMatches, userStats } = useMatches();
+  const { activeMatches, completedMatches, userStats } = useMatches();
+  const { matches: blockchainMatches, isLoading: matchesLoading, error: matchesError, openMatchesCount } = useOpenMatchesWithFixtures();
   const [selectedMatchId, setSelectedMatchId] = useState<number>(0);
   const match = useMatch(selectedMatchId);
+
+  console.log('blockchainMatches from custom hook:', blockchainMatches);
   
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedMatch, setSelectedMatch] = useState<Match | null>(null);
   const [joinModalOpen, setJoinModalOpen] = useState(false);
-  const [blockchainMatches, setBlockchainMatches] = useState<Match[]>([]);
-
-  // Fetch blockchain match data when openMatches changes
-  useEffect(() => {
-    if (openMatches && openMatches.length > 0) {
-      // Create match data based on the match IDs from blockchain
-      const matches: Match[] = openMatches.map((matchId, index) => ({
-        id: matchId.toString(),
-        creator: '0x0000000000000000000000000000000000000000',
-        stake: '1000000000000000000', // 1 BLEAG token in wei
-        fixtureId: matchId,
-        fixture: {
-          id: matchId,
-          date: new Date(Date.now() + (index + 1) * 24 * 60 * 60 * 1000).toISOString(),
-          homeTeam: `Team ${index + 1}A`,
-          awayTeam: `Team ${index + 1}B`,
-          homeTeamLogo: '/api/placeholder/40/40',
-          awayTeamLogo: '/api/placeholder/40/40',
-          status: 'upcoming' as const,
-          league: 'Premier League',
-        },
-        creatorPrediction: 'home' as const,
-        settled: false,
-        status: 'open' as const,
-        createdAt: Date.now(),
-      }));
-      setBlockchainMatches(matches);
-    } else {
-      setBlockchainMatches([]);
-    }
-  }, [openMatches]);
 
   const handleJoinClick = (matchId: string) => {
     // Find the blockchain match
@@ -92,26 +65,6 @@ const Dashboard = () => {
     }
   };
 
-  // No sync needed - we're using blockchain data directly
-
-  const handleApproveTokens = async () => {
-    if (!isConnected) {
-      toast.error('Please connect your wallet first');
-      return;
-    }
-
-    try {
-      // Approve a large amount for convenience (1000 BLEAG tokens)
-      const amount = BigInt(1000) * BigInt(10 ** 18);
-      await approve(amount);
-      toast.success('Tokens approved successfully!');
-    } catch (error) {
-      console.error('Failed to approve tokens:', error);
-      toast.error('Failed to approve tokens. Please try again.');
-    }
-  };
-
-  // Convert fixtures to matches format for the original UI
   // Filter blockchain matches based on search query
   const filteredMatches = blockchainMatches.filter(
     (match) =>
@@ -120,7 +73,7 @@ const Dashboard = () => {
       match.fixture.league.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  // No error handling needed for blockchain data - it's handled by wagmi
+  console.log('filteredMatches:', filteredMatches);
 
   return (
     <div className="min-h-screen bg-background">
@@ -137,49 +90,8 @@ const Dashboard = () => {
               Compete head-to-head in fantasy football matches. Stake your $BLEAG tokens, predict match outcomes, and win big!
             </p>
             
-            {/* Wallet Status */}
-            {isConnected ? (
-              <div className="mb-6 p-4 bg-white/10 rounded-lg border border-white/20">
-                <div className="flex items-center gap-2 mb-2">
-                  <Wallet className="w-4 h-4 text-white" />
-                  <span className="text-sm font-medium text-white">Wallet Connected</span>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                  <div>
-                    <span className="text-white/70">Balance:</span>
-                    <span className="ml-2 text-white font-semibold">
-                      {balance ? (Number(balance) / 10 ** 18).toFixed(2) : '0'} BLEAG
-                    </span>
-                  </div>
-                  <div>
-                    <span className="text-white/70">Allowance:</span>
-                    <span className="ml-2 text-white font-semibold">
-                      {allowance ? (Number(allowance) / 10 ** 18).toFixed(2) : '0'} BLEAG
-                    </span>
-                  </div>
-                  {userStats && (
-                    <div>
-                      <span className="text-white/70">Win Rate:</span>
-                      <span className="ml-2 text-white font-semibold">
-                        {userStats.winRate.toString()}%
-                      </span>
-                    </div>
-                  )}
-                </div>
-                {(!allowance || Number(allowance) === 0) && (
-                  <div className="mt-3">
-                    <Button
-                      onClick={handleApproveTokens}
-                      disabled={isApproving}
-                      size="sm"
-                      className="bg-white text-primary hover:bg-white/90"
-                    >
-                      {isApproving ? 'Approving...' : 'Approve Tokens'}
-                    </Button>
-                  </div>
-                )}
-              </div>
-            ) : (
+            {/* Wallet connection status - simplified */}
+            {!isConnected && (
               <div className="mb-6 p-4 bg-red-500/20 rounded-lg border border-red-500/30">
                 <div className="flex items-center gap-2">
                   <Wallet className="w-4 h-4 text-red-400" />
@@ -231,7 +143,7 @@ const Dashboard = () => {
         <Tabs defaultValue="open" className="space-y-6">
           <TabsList className="bg-card border border-border">
             <TabsTrigger value="open">
-              Open Matches {openMatches && `(${openMatches.length})`}
+              Open Matches ({openMatchesCount})
             </TabsTrigger>
             <TabsTrigger value="active">
               Active Matches {activeMatches && `(${activeMatches.length})`}
@@ -250,9 +162,13 @@ const Dashboard = () => {
                   Connect your wallet to view and join matches
                 </p>
               </div>
-            ) : !openMatches ? (
+            ) : matchesLoading ? (
               <div className="text-center py-12 text-muted-foreground">
                 Loading blockchain matches...
+              </div>
+            ) : matchesError ? (
+              <div className="text-center py-12 text-muted-foreground">
+                Error loading matches. Please try again.
               </div>
             ) : filteredMatches.length === 0 ? (
               <div className="text-center py-12 text-muted-foreground">
