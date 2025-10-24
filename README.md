@@ -369,10 +369,10 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - **Regulatory Advantage**: Web3 technology bypasses traditional restrictions
 
 ### **Growth Strategy**
-- **Phase 1 (Q4 2024)**: Premier League focus with core betting and smart contracts
-- **Phase 2 (Q1 2025)**: Multi-sport expansion (Champions League, World Cup)
-- **Phase 3 (Q2-Q3 2025)**: Global markets and additional sports
-- **Phase 4 (Q4 2025)**: NFT marketplace and governance token
+- **Phase 1 (Q4 2025)**: Premier League focus with core betting and smart contracts
+- **Phase 2 (Q1 2026)**: Multi-sport expansion (Champions League, World Cup)
+- **Phase 3 (Q2-Q3 2026)**: Global markets and additional sports
+- **Phase 4 (Q4 2026)**: NFT marketplace and governance token
 
 ---
 
@@ -388,18 +388,18 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🎯 **Development Roadmap**
 
-### **Phase 1: MVP Launch (Q4 2024)**
-- ✅ Smart contract development and deployment
-- ✅ Wallet authentication system
-- ✅ Core betting functionality
-- ✅ Premier League data integration
-- ✅ User profiles and statistics
-- ✅ Web application (React + Vite)
-- ✅ Backend API (Node.js + Express)
+### **Phase 1: MVP Launch (Q4 2025)**
+- 🔄 Smart contract development and deployment
+- 🔄 Wallet authentication system
+- 🔄 Core betting functionality
+- 🔄 Premier League data integration
+- 🔄 User profiles and statistics
+- 🔄 Web application (React + Vite)
+- 🔄 Backend API (Node.js + Express)
 - 🔄 Mobile app development
 - 🔄 Advanced analytics dashboard
 
-### **Phase 2: Market Expansion (Q1 2025)**
+### **Phase 2: Market Expansion (Q1 2026)**
 - 🔄 Multi-sport support (Champions League, World Cup)
 - 🔄 Tournament and league systems
 - 🔄 Enhanced social features
@@ -407,14 +407,14 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - 🔄 API for third-party developers
 - 🔄 Mobile app launch
 
-### **Phase 3: Global Scale (Q2-Q3 2025)**
+### **Phase 3: Global Scale (Q2-Q3 2026)**
 - 🔄 International market expansion
 - 🔄 Governance token launch
 - 🔄 Advanced DeFi integrations
 - 🔄 Enterprise partnerships
 - 🔄 Regulatory compliance framework
 
-### **Phase 4: Ecosystem Growth (Q4 2025)**
+### **Phase 4: Ecosystem Growth (Q4 2026)**
 - 🔄 Cross-chain integration
 - 🔄 Advanced betting features
 - 🔄 Community governance
