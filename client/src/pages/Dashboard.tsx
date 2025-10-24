@@ -51,18 +51,39 @@ const Dashboard = () => {
     // Check if we're coming from create match page
     const state = location.state as { fromCreateMatch?: boolean } | null;
     if (state?.fromCreateMatch) {
-      // Add a small delay to ensure the blockchain transaction is processed
-      const timer = setTimeout(() => {
-        console.log('🔄 Auto-refreshing dashboard data after match creation...');
-        toast.info('Refreshing matches...', {
-          description: 'Loading your newly created match'
-        });
-        // Force a page refresh to get the latest data
-        window.location.reload();
-      }, 3000);
+      // Check if we've already refreshed in this session
+      const hasRefreshedThisSession = sessionStorage.getItem('dashboardRefreshed');
+      const lastRefreshTime = sessionStorage.getItem('lastRefreshTime');
+      const now = Date.now();
+      
+      // Only refresh if we haven't refreshed in the last 10 seconds
+      const shouldRefresh = !hasRefreshedThisSession || 
+        (lastRefreshTime && (now - parseInt(lastRefreshTime)) > 10000);
+      
+      if (shouldRefresh) {
+        // Mark that we've refreshed in this session
+        sessionStorage.setItem('dashboardRefreshed', 'true');
+        sessionStorage.setItem('lastRefreshTime', now.toString());
+        
+        // Add a small delay to ensure the blockchain transaction is processed
+        const timer = setTimeout(() => {
+          console.log('🔄 Auto-refreshing dashboard data after match creation...');
+          toast.info('Refreshing matches...', {
+            description: 'Loading your newly created match'
+          });
+          // Force a page refresh to get the latest data
+          window.location.reload();
+        }, 3000);
 
-      return () => clearTimeout(timer);
+        return () => clearTimeout(timer);
+      }
     }
+
+    // Cleanup function to clear the refresh flag when component unmounts
+    return () => {
+      // Clear the refresh flag when navigating away from dashboard
+      sessionStorage.removeItem('dashboardRefreshed');
+    };
   }, [location.state]);
 
   const handleJoinClick = (matchId: string) => {
