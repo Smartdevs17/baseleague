@@ -1,8 +1,9 @@
 # 🏆 BaseLeague - Decentralized Football Betting Platform
 
-[![Built with Next.js](https://img.shields.io/badge/Built%20with-Next.js-000000?style=for-the-badge&logo=next.js)](https://nextjs.org/)
-[![Powered by Ethereum](https://img.shields.io/badge/Powered%20by-Ethereum-627EEA?style=for-the-badge&logo=ethereum)](https://ethereum.org/)
-[![MongoDB Atlas](https://img.shields.io/badge/Database-MongoDB-47A248?style=for-the-badge&logo=mongodb)](https://www.mongodb.com/atlas)
+[![Built with React](https://img.shields.io/badge/Built%20with-React-61DAFB?style=for-the-badge&logo=react)](https://reactjs.org/)
+[![Powered by Base](https://img.shields.io/badge/Powered%20by-Base-0052FF?style=for-the-badge&logo=base)](https://base.org/)
+[![Smart Contracts](https://img.shields.io/badge/Smart%20Contracts-Solidity-363636?style=for-the-badge&logo=solidity)](https://soliditylang.org/)
+[![Database MongoDB](https://img.shields.io/badge/Database-MongoDB-47A248?style=for-the-badge&logo=mongodb)](https://www.mongodb.com/atlas)
 [![Deployed on Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-000000?style=for-the-badge&logo=vercel)](https://vercel.com/)
 
 > **Revolutionizing sports betting through blockchain technology, wallet-based authentication, and real-time Premier League data integration.**
@@ -61,13 +62,14 @@ BaseLeague is a **next-generation decentralized betting platform** that combines
 ## 🏗️ **Technical Architecture**
 
 ### **Frontend Stack**
-- **Next.js 14** - React framework with App Router
+- **React 18** - Modern React with hooks
 - **TypeScript** - Type-safe development
 - **Tailwind CSS** - Utility-first styling
 - **Shadcn/ui** - Accessible component library
 - **Wagmi** - React hooks for Ethereum
 - **RainbowKit** - Wallet connection UI
 - **TanStack Query** - Server state management
+- **Vite** - Fast build tool and dev server
 
 ### **Backend Stack**
 - **Node.js** - JavaScript runtime
@@ -76,6 +78,15 @@ BaseLeague is a **next-generation decentralized betting platform** that combines
 - **Mongoose** - MongoDB object modeling
 - **Ethers.js** - Ethereum library
 - **JWT** - Authentication tokens
+
+### **Smart Contracts**
+- **Solidity** - Smart contract language
+- **Base Network** - Ethereum L2 deployment
+- **Match Manager Contract** - Handles betting logic and match creation
+- **Token Contract** - $BLEAG token implementation with ERC-20 standard
+- **OpenZeppelin** - Security standards and libraries
+- **Automated Payouts** - Smart contract-based reward distribution
+- **Anti-Hedging Protection** - Prevents multiple bets on same match
 
 ### **Infrastructure**
 - **Vercel** - Frontend deployment
@@ -140,6 +151,33 @@ BaseLeague is a **next-generation decentralized betting platform** that combines
    - Frontend: http://localhost:5173
    - Backend API: http://localhost:5000
    - API Documentation: [Postman Collection](https://documenter.getpostman.com/view/21732859/2sB3WjxiGx)
+
+---
+
+## 🔗 **Smart Contracts**
+
+### **Match Manager Contract**
+- **Functionality**: Handles match creation, joining, and settlement
+- **Features**: 
+  - Create matches with custom stake amounts
+  - Join existing matches with predictions
+  - Automatic match settlement based on results
+  - Anti-hedging protection (one bet per user per match)
+- **Security**: OpenZeppelin standards and custom validation
+
+### **Token Contract ($BLEAG)**
+- **Standard**: ERC-20 compliant token
+- **Features**:
+  - Transfer and approval mechanisms
+  - Minting capabilities for rewards
+  - Burn functionality for deflationary mechanics
+- **Integration**: Seamless integration with betting system
+
+### **Contract Security**
+- **Audited Code**: Following OpenZeppelin best practices
+- **Access Control**: Role-based permissions for admin functions
+- **Upgradeability**: Proxy pattern for future improvements
+- **Gas Optimization**: Efficient contract design for Base Network
 
 ---
 
@@ -331,10 +369,10 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - **Regulatory Advantage**: Web3 technology bypasses traditional restrictions
 
 ### **Growth Strategy**
-- **Phase 1**: Premier League focus with core betting
-- **Phase 2**: Multi-sport expansion (Champions League, World Cup)
-- **Phase 3**: Global markets and additional sports
-- **Phase 4**: NFT marketplace and governance token
+- **Phase 1 (Q4 2024)**: Premier League focus with core betting and smart contracts
+- **Phase 2 (Q1 2025)**: Multi-sport expansion (Champions League, World Cup)
+- **Phase 3 (Q2-Q3 2025)**: Global markets and additional sports
+- **Phase 4 (Q4 2025)**: NFT marketplace and governance token
 
 ---
 
@@ -350,27 +388,38 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🎯 **Development Roadmap**
 
-### **Phase 1: MVP Launch (Q1 2024)**
+### **Phase 1: MVP Launch (Q4 2024)**
+- ✅ Smart contract development and deployment
 - ✅ Wallet authentication system
 - ✅ Core betting functionality
 - ✅ Premier League data integration
 - ✅ User profiles and statistics
+- ✅ Web application (React + Vite)
+- ✅ Backend API (Node.js + Express)
 - 🔄 Mobile app development
 - 🔄 Advanced analytics dashboard
 
-### **Phase 2: Market Expansion (Q2 2024)**
+### **Phase 2: Market Expansion (Q1 2025)**
 - 🔄 Multi-sport support (Champions League, World Cup)
 - 🔄 Tournament and league systems
 - 🔄 Enhanced social features
 - 🔄 NFT marketplace integration
 - 🔄 API for third-party developers
+- 🔄 Mobile app launch
 
-### **Phase 3: Global Scale (Q3-Q4 2024)**
+### **Phase 3: Global Scale (Q2-Q3 2025)**
 - 🔄 International market expansion
 - 🔄 Governance token launch
 - 🔄 Advanced DeFi integrations
 - 🔄 Enterprise partnerships
 - 🔄 Regulatory compliance framework
+
+### **Phase 4: Ecosystem Growth (Q4 2025)**
+- 🔄 Cross-chain integration
+- 🔄 Advanced betting features
+- 🔄 Community governance
+- 🔄 Strategic partnerships
+- 🔄 Global market penetration
 
 ---
 
