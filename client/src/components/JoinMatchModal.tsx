@@ -18,6 +18,9 @@ const JoinMatchModal = ({ open, onOpenChange, match, onConfirm }: JoinMatchModal
   const [prediction, setPrediction] = useState<PredictionType>('home');
   const [isJoining, setIsJoining] = useState(false);
 
+  console.log('prediction', prediction);
+
+
   const handleJoin = async () => {
     if (!match) return;
     
