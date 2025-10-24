@@ -1,4 +1,4 @@
-import { useAccount, useContractRead, useContractWrite, useWaitForTransaction } from 'wagmi';
+import { useAccount, useContractRead, useContractWrite, useWaitForTransactionReceipt } from 'wagmi';
 import { contractHelpers } from '@/lib/wagmi';
 import { contracts } from '@/lib/wagmi';
 import { Match, UserStats, Prediction } from '@/lib/contracts';
@@ -17,14 +17,13 @@ export const useToken = () => {
     enabled: !!address,
   });
 
-  const approveWrite = useContractWrite({
-    address: contracts.bleagToken.address,
-    abi: contracts.bleagToken.abi,
-    functionName: 'approve',
-  });
+  const { writeContract: approveWrite, isPending: isApproving, error: approveError } = useContractWrite();
 
   const approve = (amount: bigint) => {
-    return approveWrite.write({
+    return approveWrite({
+      address: contracts.bleagToken.address,
+      abi: contracts.bleagToken.abi,
+      functionName: 'approve',
       args: [contracts.matchManager.address, amount],
     });
   };
@@ -33,8 +32,8 @@ export const useToken = () => {
     balance,
     allowance,
     approve,
-    isApproving: approveWrite.isPending,
-    approveError: approveWrite.error,
+    isApproving,
+    approveError,
   };
 };
 
@@ -73,65 +72,67 @@ export const useMatches = () => {
   };
 };
 
+// Hook for creating matches (doesn't require a matchId)
+export const useCreateMatch = () => {
+  const { writeContract: createMatchWrite, isPending: isCreating, error: createError } = useContractWrite();
+
+  const createMatch = (fixtureId: string, prediction: Prediction, stakeAmount: bigint) => {
+    return createMatchWrite({
+      address: contracts.matchManager.address,
+      abi: contracts.matchManager.abi,
+      functionName: 'createMatch',
+      args: [fixtureId, prediction, stakeAmount],
+    });
+  };
+
+  return {
+    createMatch,
+    isCreating,
+    createError,
+  };
+};
+
 // Hook for individual match operations
 export const useMatch = (matchId: number) => {
   const { data: match } = useContractRead({
     ...contractHelpers.getMatch(matchId),
   }) as { data: Match | undefined };
 
-  const createMatchWrite = useContractWrite({
-    address: contracts.matchManager.address,
-    abi: contracts.matchManager.abi,
-    functionName: 'createMatch',
-  });
-
-  const joinMatchWrite = useContractWrite({
-    address: contracts.matchManager.address,
-    abi: contracts.matchManager.abi,
-    functionName: 'joinMatch',
-  });
-
-  const cancelMatchWrite = useContractWrite({
-    address: contracts.matchManager.address,
-    abi: contracts.matchManager.abi,
-    functionName: 'cancelMatch',
-  });
-
-  const createMatch = (fixtureId: string, prediction: Prediction, stakeAmount: bigint) => {
-    return createMatchWrite.write({
-      args: [fixtureId, prediction, stakeAmount],
-    });
-  };
+  const { writeContract: joinMatchWrite, isPending: isJoining, error: joinError } = useContractWrite();
+  const { writeContract: cancelMatchWrite, isPending: isCancelling, error: cancelError } = useContractWrite();
 
   const joinMatch = (prediction: Prediction) => {
-    return joinMatchWrite.write({
+    return joinMatchWrite({
+      address: contracts.matchManager.address,
+      abi: contracts.matchManager.abi,
+      functionName: 'joinMatch',
       args: [matchId, prediction],
     });
   };
 
   const cancelMatch = () => {
-    return cancelMatchWrite.write({
+    return cancelMatchWrite({
+      address: contracts.matchManager.address,
+      abi: contracts.matchManager.abi,
+      functionName: 'cancelMatch',
       args: [matchId],
     });
   };
 
   return {
     match,
-    createMatch,
     joinMatch,
     cancelMatch,
-    isCreating: createMatchWrite.isPending,
-    isJoining: joinMatchWrite.isPending,
-    isCancelling: cancelMatchWrite.isPending,
-    createError: createMatchWrite.error,
-    joinError: joinMatchWrite.error,
-    cancelError: cancelMatchWrite.error,
+    isJoining,
+    isCancelling,
+    joinError,
+    cancelError,
   };
 };
 
-// Hook for transaction status
+// Hook for transaction status using wagmi v2 API
 export const useTransactionStatus = (hash: `0x${string}` | undefined) => {
-  const { data: receipt, isLoading, error } = useWaitForTransaction({
+  const { data: receipt, isLoading, error } = useWaitForTransactionReceipt({
     hash,
   });
 

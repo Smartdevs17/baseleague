@@ -1,24 +1,34 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAccount } from 'wagmi';
 import Navbar from '@/components/Navbar';
 import CreateMatchModal from '@/components/CreateMatchModal';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Search, Calendar, Clock } from 'lucide-react';
+import { Search, Calendar, Clock, Wallet } from 'lucide-react';
 import { Fixture, PredictionType } from '@/types/match';
 import { toast } from 'sonner';
 import { useUpcomingFixturesQuery, useFilteredFixtures } from '@/hooks/useFixtures';
 import { useTeamLogos } from '@/hooks/useTeamLogos';
 import { preloadTeamLogos } from '@/utils/logoPreloader';
+import { useToken, useCreateMatch } from '@/hooks/useContracts';
 import { ApiFixture } from '@/store/fixtures';
+import { Prediction } from '@/lib/contracts';
 
 const CreateMatch = () => {
   const navigate = useNavigate();
+  const { address, isConnected } = useAccount();
+  
+  // API hooks for fixtures
   const { fixtures, loading, error } = useUpcomingFixturesQuery();
   const { updateFilters } = useFilteredFixtures();
   const { getTeamLogo } = useTeamLogos();
+  
+  // Smart contract hooks
+  const { balance, allowance, approve, isApproving } = useToken();
+  const { createMatch, isCreating, createError } = useCreateMatch();
   
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedFixture, setSelectedFixture] = useState<ApiFixture | null>(null);
@@ -47,14 +57,39 @@ const CreateMatch = () => {
   };
 
   const handleCreateMatch = async (stake: string, prediction: PredictionType) => {
-    // TODO: Implement actual contract call
-    toast.success('Match created successfully!', {
-      description: 'Your match is now live and waiting for an opponent.',
-    });
-    
-    setTimeout(() => {
-      navigate('/my-matches');
-    }, 1500);
+    if (!isConnected) {
+      toast.error('Please connect your wallet first');
+      return;
+    }
+
+    if (!selectedFixture) {
+      toast.error('Please select a fixture first');
+      return;
+    }
+
+    try {
+      // Convert stake to wei
+      const stakeAmount = BigInt(stake) * BigInt(10 ** 18);
+      
+      // Convert prediction type to contract enum
+      const contractPrediction = prediction === 'home' ? Prediction.HOME : 
+                               prediction === 'draw' ? Prediction.DRAW : 
+                               Prediction.AWAY;
+
+      // Create match using smart contract
+      await createMatch(selectedFixture.externalId, contractPrediction, stakeAmount);
+      
+      toast.success('Match created successfully!', {
+        description: 'Your match is now live and waiting for an opponent.',
+      });
+      
+      setTimeout(() => {
+        navigate('/my-matches');
+      }, 1500);
+    } catch (error) {
+      console.error('Failed to create match:', error);
+      toast.error('Failed to create match. Please try again.');
+    }
   };
 
   // Convert ApiFixture to Fixture for the modal
@@ -113,6 +148,52 @@ const CreateMatch = () => {
           <p className="text-muted-foreground">
             Select an upcoming fixture to create your challenge
           </p>
+          
+          {/* Wallet Status */}
+          {isConnected ? (
+            <div className="mt-4 p-4 bg-green-500/10 rounded-lg border border-green-500/30">
+              <div className="flex items-center gap-2 mb-2">
+                <Wallet className="w-4 h-4 text-green-400" />
+                <span className="text-sm font-medium text-green-400">Wallet Connected</span>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                <div>
+                  <span className="text-muted-foreground">Balance:</span>
+                  <span className="ml-2 text-foreground font-semibold">
+                    {balance ? (Number(balance) / 10 ** 18).toFixed(2) : '0'} BLEAG
+                  </span>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">Allowance:</span>
+                  <span className="ml-2 text-foreground font-semibold">
+                    {allowance ? (Number(allowance) / 10 ** 18).toFixed(2) : '0'} BLEAG
+                  </span>
+                </div>
+              </div>
+              {(!allowance || Number(allowance) === 0) && (
+                <div className="mt-3">
+                  <Button
+                    onClick={() => approve(BigInt(1000) * BigInt(10 ** 18))}
+                    disabled={isApproving}
+                    size="sm"
+                    className="bg-green-600 hover:bg-green-700"
+                  >
+                    {isApproving ? 'Approving...' : 'Approve Tokens'}
+                  </Button>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="mt-4 p-4 bg-red-500/10 rounded-lg border border-red-500/30">
+              <div className="flex items-center gap-2">
+                <Wallet className="w-4 h-4 text-red-400" />
+                <span className="text-sm font-medium text-red-400">Wallet Not Connected</span>
+              </div>
+              <p className="text-sm text-red-300 mt-1">
+                Please connect your wallet to create matches
+              </p>
+            </div>
+          )}
         </div>
 
         {/* Search */}
