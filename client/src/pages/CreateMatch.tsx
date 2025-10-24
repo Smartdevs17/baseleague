@@ -52,6 +52,14 @@ const CreateMatch = () => {
   }, [fixtures]);
 
   const handleFixtureSelect = (fixture: ApiFixture) => {
+    // Check if user has tokens before allowing fixture selection
+    if (balance && BigInt(balance.toString()) === 0n) {
+      toast.error('Insufficient $BLEAG token balance', {
+        description: 'You need $BLEAG tokens to create a match. Please acquire some tokens first.'
+      });
+      return;
+    }
+    
     setSelectedFixture(fixture);
     setModalOpen(true);
   };
@@ -67,9 +75,24 @@ const CreateMatch = () => {
       return;
     }
 
+    // Check if user has sufficient token balance
+    if (!balance || BigInt(balance.toString()) === 0n) {
+      toast.error('Insufficient $BLEAG token balance', {
+        description: 'You need $BLEAG tokens to create a match. Please acquire some tokens first.'
+      });
+      return;
+    }
+
+    // Check if stake amount is greater than available balance
+    const stakeAmount = BigInt(stake) * BigInt(10 ** 18);
+    if (BigInt(balance.toString()) < stakeAmount) {
+      toast.error('Insufficient token balance', {
+        description: `You need at least ${stake} $BLEAG tokens to create this match.`
+      });
+      return;
+    }
+
     try {
-      // Convert stake to wei
-      const stakeAmount = BigInt(stake) * BigInt(10 ** 18);
       
       // Convert prediction type to contract enum
       const contractPrediction = prediction === 'home' ? Prediction.HOME : 
@@ -105,7 +128,7 @@ const CreateMatch = () => {
       });
       
       setTimeout(() => {
-        navigate('/');
+        navigate('/app', { state: { fromCreateMatch: true } });
       }, 1500);
       
     } catch (error) {
@@ -212,6 +235,19 @@ const CreateMatch = () => {
                   </Button>
                 </div>
               )}
+              
+              {/* Zero balance warning */}
+              {balance && BigInt(balance.toString()) === 0n && (
+                <div className="mt-3 p-3 bg-yellow-500/20 rounded-lg border border-yellow-500/30">
+                  <div className="flex items-center gap-2">
+                    <Wallet className="w-4 h-4 text-yellow-400" />
+                    <span className="text-sm font-medium text-yellow-400">No $BLEAG Tokens</span>
+                  </div>
+                  <p className="text-sm text-yellow-300 mt-1">
+                    You need $BLEAG tokens to create matches. Please acquire some tokens first.
+                  </p>
+                </div>
+              )}
             </div>
           ) : (
             <div className="mt-4 p-4 bg-red-500/10 rounded-lg border border-red-500/30">
@@ -254,7 +290,11 @@ const CreateMatch = () => {
               return (
                 <Card
                   key={fixture.id}
-                  className="overflow-hidden border-border bg-card hover:border-primary/50 transition-all hover:shadow-glow cursor-pointer group"
+                  className={`overflow-hidden border-border bg-card transition-all group ${
+                    balance && BigInt(balance.toString()) === 0n 
+                      ? 'opacity-50 cursor-not-allowed' 
+                      : 'hover:border-primary/50 hover:shadow-glow cursor-pointer'
+                  }`}
                   onClick={() => handleFixtureSelect(fixture)}
                 >
                   <div className="p-6 space-y-4">
