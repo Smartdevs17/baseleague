@@ -4,8 +4,9 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Match, PredictionType } from '@/types/match';
-import { Loader2, AlertCircle } from 'lucide-react';
+import { Loader2, AlertCircle, Wallet } from 'lucide-react';
 import { formatEther } from 'viem';
+import { useToken } from '@/hooks/useContracts';
 
 interface JoinMatchModalProps {
   open: boolean;
@@ -17,6 +18,12 @@ interface JoinMatchModalProps {
 const JoinMatchModal = ({ open, onOpenChange, match, onConfirm }: JoinMatchModalProps) => {
   const [prediction, setPrediction] = useState<PredictionType>('home');
   const [isJoining, setIsJoining] = useState(false);
+  
+  // Get token balance and allowance
+  const { balance, allowance } = useToken();
+
+  console.log('prediction', prediction);
+
 
   const handleJoin = async () => {
     if (!match) return;
@@ -137,6 +144,33 @@ const JoinMatchModal = ({ open, onOpenChange, match, onConfirm }: JoinMatchModal
                 </Label>
               </div>
             </RadioGroup>
+          </div>
+
+          {/* Wallet Status */}
+          <div className="p-4 bg-secondary/50 rounded-lg border border-border">
+            <div className="flex items-center gap-2 mb-3">
+              <Wallet className="w-4 h-4 text-muted-foreground" />
+              <span className="text-sm font-medium">Wallet Status</span>
+            </div>
+            <div className="grid grid-cols-2 gap-4 text-sm">
+              <div>
+                <span className="text-muted-foreground">Balance:</span>
+                <span className="ml-2 text-foreground font-semibold">
+                  {balance ? formatEther(BigInt(balance.toString())) : '0'} BLEAG
+                </span>
+              </div>
+              <div>
+                <span className="text-muted-foreground">Allowance:</span>
+                <span className="ml-2 text-foreground font-semibold">
+                  {allowance ? formatEther(BigInt(allowance.toString())) : '0'} BLEAG
+                </span>
+              </div>
+            </div>
+            {match && allowance && BigInt(allowance.toString()) < BigInt(match.stake) && (
+              <div className="mt-3 p-2 bg-yellow-500/10 border border-yellow-500/30 rounded text-xs text-yellow-600">
+                ⚠️ Insufficient allowance. Tokens will be approved automatically.
+              </div>
+            )}
           </div>
 
           {/* Prize Info */}

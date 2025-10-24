@@ -1,23 +1,57 @@
 import { config } from './config';
+import matchManagerABI from '../contracts/match_manager.json';
+import tokenABI from '../contracts/token.json';
 
 // Smart Contract ABIs and Addresses
 export const BLEAG_TOKEN_ADDRESS = config.contracts.bleagToken;
 export const MATCH_MANAGER_ADDRESS = config.contracts.matchManager;
 
-export const BLEAG_TOKEN_ABI = [
-  'function balanceOf(address owner) view returns (uint256)',
-  'function approve(address spender, uint256 amount) returns (bool)',
-  'function allowance(address owner, address spender) view returns (uint256)',
-  'function transfer(address to, uint256 amount) returns (bool)',
-] as const;
+// Use the actual ABI files instead of hardcoded ABIs
+export const BLEAG_TOKEN_ABI = tokenABI;
+export const MATCH_MANAGER_ABI = matchManagerABI;
 
-export const MATCH_MANAGER_ABI = [
-  'event MatchCreated(uint256 indexed matchId, address indexed creator, uint256 stake, uint256 fixtureId)',
-  'event MatchJoined(uint256 indexed matchId, address indexed joiner)',
-  'event MatchSettled(uint256 indexed matchId, address indexed winner, uint256 reward)',
-  
-  'function createMatch(uint256 stake, uint256 fixtureId, uint8 prediction) returns (uint256)',
-  'function joinMatch(uint256 matchId, uint8 prediction) returns (bool)',
-  'function getMatch(uint256 matchId) view returns (tuple(address creator, address joiner, uint256 stake, uint256 fixtureId, uint8 creatorPrediction, uint8 joinerPrediction, bool settled, address winner))',
-  'function getUserMatches(address user) view returns (uint256[])',
-] as const;
+// Type definitions for better TypeScript support
+export interface Match {
+  id: number;
+  creator: string;
+  joiner: string;
+  stakeAmount: bigint;
+  fixtureId: string;
+  creatorPrediction: number;
+  joinerPrediction: number;
+  status: number;
+  result: number;
+  createdAt: bigint;
+  completedAt: bigint;
+  isSettled: boolean;
+}
+
+export interface UserStats {
+  totalMatches: bigint;
+  wins: bigint;
+  losses: bigint;
+  totalStaked: bigint;
+  totalWinnings: bigint;
+  winRate: bigint;
+}
+
+// Enum values for better type safety
+export enum Prediction {
+  HOME = 0,
+  DRAW = 1,
+  AWAY = 2,
+}
+
+export enum MatchStatus {
+  OPEN = 0,
+  ACTIVE = 1,
+  COMPLETED = 2,
+  CANCELLED = 3,
+}
+
+export enum MatchResult {
+  CREATOR_WIN = 0,
+  DRAW = 1,
+  JOINER_WIN = 2,
+  CANCELLED = 3,
+}
