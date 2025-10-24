@@ -10,12 +10,15 @@ import { Search, Calendar, Clock } from 'lucide-react';
 import { Fixture, PredictionType } from '@/types/match';
 import { toast } from 'sonner';
 import { useUpcomingFixturesQuery, useFilteredFixtures } from '@/hooks/useFixtures';
+import { useTeamLogos } from '@/hooks/useTeamLogos';
+import { preloadTeamLogos } from '@/utils/logoPreloader';
 import { ApiFixture } from '@/store/fixtures';
 
 const CreateMatch = () => {
   const navigate = useNavigate();
   const { fixtures, loading, error } = useUpcomingFixturesQuery();
   const { updateFilters } = useFilteredFixtures();
+  const { getTeamLogo } = useTeamLogos();
   
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedFixture, setSelectedFixture] = useState<ApiFixture | null>(null);
@@ -30,6 +33,13 @@ const CreateMatch = () => {
   useEffect(() => {
     updateFilters({ searchQuery });
   }, [searchQuery, updateFilters]);
+
+  // Preload team logos when fixtures are loaded
+  useEffect(() => {
+    if (fixtures.length > 0) {
+      preloadTeamLogos(fixtures);
+    }
+  }, [fixtures]);
 
   const handleFixtureSelect = (fixture: ApiFixture) => {
     setSelectedFixture(fixture);
@@ -54,8 +64,8 @@ const CreateMatch = () => {
       date: apiFixture.kickoffTime,
       homeTeam: apiFixture.homeTeam,
       awayTeam: apiFixture.awayTeam,
-      homeTeamLogo: '', // Not available in API response
-      awayTeamLogo: '', // Not available in API response
+      homeTeamLogo: getTeamLogo(apiFixture.homeTeamId, apiFixture.homeTeam),
+      awayTeamLogo: getTeamLogo(apiFixture.awayTeamId, apiFixture.awayTeam),
       status: apiFixture.status === 'pending' ? 'upcoming' : 
               apiFixture.status === 'cancelled' ? 'finished' : 
               apiFixture.status as 'upcoming' | 'live' | 'finished',
@@ -152,8 +162,16 @@ const CreateMatch = () => {
                     <div className="space-y-3">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3 flex-1">
-                          <div className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center">
-                            <div className="w-6 h-6 bg-primary/20 rounded-full"></div>
+                          <div className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center overflow-hidden">
+                            <img
+                              src={getTeamLogo(fixture.homeTeamId, fixture.homeTeam)}
+                              alt={fixture.homeTeam}
+                              className="w-8 h-8 object-contain"
+                              onError={(e) => {
+                                const target = e.target as HTMLImageElement;
+                                target.src = 'https://via.placeholder.com/32x32/1f2937/ffffff?text=?';
+                              }}
+                            />
                           </div>
                           <span className="font-medium text-sm">{fixture.homeTeam}</span>
                         </div>
@@ -165,8 +183,16 @@ const CreateMatch = () => {
 
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3 flex-1">
-                          <div className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center">
-                            <div className="w-6 h-6 bg-primary/20 rounded-full"></div>
+                          <div className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center overflow-hidden">
+                            <img
+                              src={getTeamLogo(fixture.awayTeamId, fixture.awayTeam)}
+                              alt={fixture.awayTeam}
+                              className="w-8 h-8 object-contain"
+                              onError={(e) => {
+                                const target = e.target as HTMLImageElement;
+                                target.src = 'https://via.placeholder.com/32x32/1f2937/ffffff?text=?';
+                              }}
+                            />
                           </div>
                           <span className="font-medium text-sm">{fixture.awayTeam}</span>
                         </div>

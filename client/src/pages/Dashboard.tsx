@@ -10,6 +10,8 @@ import { Search, Plus, TrendingUp } from 'lucide-react';
 import { Match, PredictionType } from '@/types/match';
 import { toast } from 'sonner';
 import { useFixtures, useFilteredFixtures, useSyncFixtures } from '@/hooks/useFixtures';
+import { useTeamLogos } from '@/hooks/useTeamLogos';
+import { preloadTeamLogos } from '@/utils/logoPreloader';
 import { ApiFixture } from '@/store/fixtures';
 
 const Dashboard = () => {
@@ -17,6 +19,7 @@ const Dashboard = () => {
   const { fixtures, loading, error, refetch } = useFixtures();
   const { fixtures: filteredFixtures, updateFilters } = useFilteredFixtures();
   const syncFixturesMutation = useSyncFixtures();
+  const { getTeamLogo } = useTeamLogos();
   
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedMatch, setSelectedMatch] = useState<Match | null>(null);
@@ -26,6 +29,13 @@ const Dashboard = () => {
   useEffect(() => {
     updateFilters({ searchQuery });
   }, [searchQuery, updateFilters]);
+
+  // Preload team logos when fixtures are loaded
+  useEffect(() => {
+    if (fixtures.length > 0) {
+      preloadTeamLogos(fixtures);
+    }
+  }, [fixtures]);
 
   const handleJoinClick = (matchId: string) => {
     // Convert fixture to match format for the modal
@@ -82,8 +92,8 @@ const Dashboard = () => {
       date: fixture.kickoffTime,
       homeTeam: fixture.homeTeam,
       awayTeam: fixture.awayTeam,
-      homeTeamLogo: '',
-      awayTeamLogo: '',
+      homeTeamLogo: getTeamLogo(fixture.homeTeamId, fixture.homeTeam),
+      awayTeamLogo: getTeamLogo(fixture.awayTeamId, fixture.awayTeam),
       status: fixture.status === 'pending' ? 'upcoming' : fixture.status as 'upcoming' | 'live' | 'finished',
       league: 'Premier League',
     },
