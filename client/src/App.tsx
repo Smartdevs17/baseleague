@@ -8,6 +8,7 @@ import { RainbowKitProvider, darkTheme } from '@rainbow-me/rainbowkit';
 import { RecoilRoot } from 'recoil';
 import { config } from './lib/wagmi';
 import { validateConfig } from './lib/config';
+import Landing from "./pages/Landing";
 import Dashboard from "./pages/Dashboard";
 import CreateMatch from "./pages/CreateMatch";
 import MyMatches from "./pages/MyMatches";
@@ -26,7 +27,7 @@ const queryClient = new QueryClient({
       retry: 3,
       retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 30000),
       staleTime: 5 * 60 * 1000, // 5 minutes
-      cacheTime: 10 * 60 * 1000, // 10 minutes
+      gcTime: 10 * 60 * 1000, // 10 minutes
     },
   },
 });
@@ -45,7 +46,8 @@ const App = () => (
             <Sonner />
             <BrowserRouter>
               <Routes>
-                <Route path="/" element={<Dashboard />} />
+                <Route path="/" element={<Landing />} />
+                <Route path="/app" element={<Dashboard />} />
                 <Route path="/create" element={<CreateMatch />} />
                 <Route path="/my-matches" element={<MyMatches />} />
                 <Route path="/leaderboard" element={<Leaderboard />} />

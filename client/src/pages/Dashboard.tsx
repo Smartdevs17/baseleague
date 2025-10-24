@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAccount } from 'wagmi';
 import Navbar from '@/components/Navbar';
 import MatchCard from '@/components/MatchCard';
@@ -7,7 +7,7 @@ import JoinMatchModal from '@/components/JoinMatchModal';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
-import { Search, Plus, TrendingUp, Wallet } from 'lucide-react';
+import { Search, Plus, TrendingUp, Wallet, Home } from 'lucide-react';
 import { Match, PredictionType } from '@/types/match';
 import { toast } from 'sonner';
 import { useMatches, useToken, useMatch } from '@/hooks/useContracts';
@@ -18,6 +18,7 @@ import { Prediction } from '@/lib/contracts';
 
 const Dashboard = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { address, isConnected } = useAccount();
   
   // Smart contract hooks
@@ -45,6 +46,25 @@ const Dashboard = () => {
   const [selectedMatch, setSelectedMatch] = useState<Match | null>(null);
   const [joinModalOpen, setJoinModalOpen] = useState(false);
 
+  // Trigger data refresh when navigating to dashboard
+  useEffect(() => {
+    // Check if we're coming from create match page
+    const state = location.state as { fromCreateMatch?: boolean } | null;
+    if (state?.fromCreateMatch) {
+      // Add a small delay to ensure the blockchain transaction is processed
+      const timer = setTimeout(() => {
+        console.log('🔄 Auto-refreshing dashboard data after match creation...');
+        toast.info('Refreshing matches...', {
+          description: 'Loading your newly created match'
+        });
+        // Force a page refresh to get the latest data
+        window.location.reload();
+      }, 3000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [location.state]);
+
   const handleJoinClick = (matchId: string) => {
     // Find the open match
     const openMatch = openMatches.find((m) => m.id === matchId);
@@ -61,6 +81,14 @@ const Dashboard = () => {
       return;
     }
 
+    // Check if user has sufficient token balance
+    if (!balance || BigInt(balance.toString()) === 0n) {
+      toast.error('Insufficient $BLEAG token balance', {
+        description: 'You need $BLEAG tokens to join a match. Please acquire some tokens first.'
+      });
+      return;
+    }
+
     try {
       // Find the match to get stake amount
       const selectedMatch = openMatches.find(m => m.id === matchId);
@@ -69,13 +97,21 @@ const Dashboard = () => {
         return;
       }
 
+      // Check if user has enough tokens for the stake amount
+      const stakeAmount = BigInt(selectedMatch.stake);
+      if (BigInt(balance.toString()) < stakeAmount) {
+        toast.error('Insufficient token balance', {
+          description: `You need at least ${selectedMatch.stake} $BLEAG tokens to join this match.`
+        });
+        return;
+      }
+
       // Convert prediction type to contract enum
       const contractPrediction = prediction === 'home' ? Prediction.HOME : 
                                prediction === 'draw' ? Prediction.DRAW : 
                                Prediction.AWAY;
 
-      // Convert stake to wei
-      const stakeAmount = BigInt(selectedMatch.stake);
+      // Convert stake to wei (already calculated above)
       
       // Step 1: Check current allowance
       const currentAllowance = allowance ? BigInt(allowance.toString()) : 0n;
@@ -172,12 +208,25 @@ const Dashboard = () => {
               </div>
             )}
 
+            {/* Token balance warning */}
+            {isConnected && balance && BigInt(balance.toString()) === 0n && (
+              <div className="mb-6 p-4 bg-yellow-500/20 rounded-lg border border-yellow-500/30">
+                <div className="flex items-center gap-2">
+                  <Wallet className="w-4 h-4 text-yellow-400" />
+                  <span className="text-sm font-medium text-yellow-400">No $BLEAG Tokens</span>
+                </div>
+                <p className="text-sm text-yellow-300 mt-1">
+                  You need $BLEAG tokens to create or join matches. Please acquire some tokens first.
+                </p>
+              </div>
+            )}
+
             <div className="flex gap-4">
               <Button
                 onClick={() => navigate('/create')}
                 size="lg"
                 className="bg-white text-primary hover:bg-white/90"
-                disabled={!isConnected}
+                disabled={!isConnected || (balance && BigInt(balance.toString()) === 0n)}
               >
                 <Plus className="w-5 h-5 mr-2" />
                 Create Match
@@ -190,6 +239,15 @@ const Dashboard = () => {
               >
                 <TrendingUp className="w-5 h-5 mr-2" />
                 Leaderboard
+              </Button>
+              <Button
+                onClick={() => navigate('/')}
+                size="lg"
+                variant="outline"
+                className="border-white text-white hover:bg-white/10"
+              >
+                <Home className="w-5 h-5 mr-2" />
+                Back to Home
               </Button>
             </div>
           </div>
@@ -244,6 +302,27 @@ const Dashboard = () => {
             ) : filteredOpenMatches.length === 0 ? (
               <div className="text-center py-12 text-muted-foreground">
                 No open matches available. Create one to get started!
+              </div>
+            ) : balance && BigInt(balance.toString()) === 0n ? (
+              <div className="text-center py-12">
+                <div className="mb-4 p-4 bg-yellow-500/20 rounded-lg border border-yellow-500/30 max-w-md mx-auto">
+                  <div className="flex items-center justify-center gap-2 mb-2">
+                    <Wallet className="w-5 h-5 text-yellow-400" />
+                    <span className="text-sm font-medium text-yellow-400">No $BLEAG Tokens</span>
+                  </div>
+                  <p className="text-sm text-yellow-300">
+                    You need $BLEAG tokens to join matches. Please acquire some tokens first.
+                  </p>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 opacity-50">
+                  {filteredOpenMatches.map((match) => (
+                    <MatchCard
+                      key={match.id}
+                      match={match}
+                      showActions={false}
+                    />
+                  ))}
+                </div>
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
