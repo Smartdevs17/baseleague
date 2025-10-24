@@ -131,7 +131,7 @@ contract MatchManager is Ownable, AccessControl, ReentrancyGuard {
         string memory fixtureId,
         Prediction prediction,
         uint256 stakeAmount
-    ) external onlyValidFixture(fixtureId) nonReentrant {
+    ) external nonReentrant {
         require(stakeAmount > 0, "MatchManager: Invalid stake amount");
         require(bleagToken.balanceOf(msg.sender) >= stakeAmount, "MatchManager: Insufficient balance");
         require(bleagToken.allowance(msg.sender, address(this)) >= stakeAmount, "MatchManager: Insufficient allowance");
