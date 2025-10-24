@@ -6,12 +6,12 @@ import { useUpcomingFixturesQuery } from './useFixtures';
 import { useTeamLogos } from './useTeamLogos';
 import { Match, Fixture } from '@/types/match';
 
-// Custom hook to fetch all open matches and map them to API fixtures
-export const useOpenMatchesWithFixtures = () => {
-  // Get open matches from blockchain
-  const { data: openMatches } = useContractRead({
-    ...contractHelpers.getOpenMatches(),
-  });
+// Custom hook to fetch all active matches and map them to API fixtures
+export const useActiveMatchesWithFixtures = () => {
+  // Get active matches from blockchain
+  const { data: activeMatches } = useContractRead({
+    ...contractHelpers.getActiveMatches(),
+  }) as { data?: number[] };
 
   // Get upcoming fixtures from API
   const { fixtures: apiFixtures, loading: fixturesLoading, error: fixturesError } = useUpcomingFixturesQuery();
@@ -20,47 +20,42 @@ export const useOpenMatchesWithFixtures = () => {
   // For now, let's limit to first 5 matches to avoid hook rule violations
   // We'll need to implement a different approach for dynamic match fetching
   const maxMatches = 5;
-  const limitedOpenMatches = useMemo(() => {
-    if (!openMatches || openMatches.length === 0) return [];
-    return openMatches.slice(0, maxMatches);
-  }, [openMatches]);
+  const limitedActiveMatches = useMemo(() => {
+    if (!activeMatches || !Array.isArray(activeMatches) || activeMatches.length === 0) return [];
+    return activeMatches.slice(0, maxMatches);
+  }, [activeMatches]);
 
   // Individual contract reads for each match (limited to avoid hook rule violations)
   const match1Data = useContractRead({
-    ...contractHelpers.getMatch(limitedOpenMatches[0] || 0),
-    enabled: limitedOpenMatches.length > 0 && limitedOpenMatches[0] > 0,
+    ...contractHelpers.getMatch(limitedActiveMatches[0] || 0),
   });
 
   const match2Data = useContractRead({
-    ...contractHelpers.getMatch(limitedOpenMatches[1] || 0),
-    enabled: limitedOpenMatches.length > 1 && limitedOpenMatches[1] > 0,
+    ...contractHelpers.getMatch(limitedActiveMatches[1] || 0),
   });
 
   const match3Data = useContractRead({
-    ...contractHelpers.getMatch(limitedOpenMatches[2] || 0),
-    enabled: limitedOpenMatches.length > 2 && limitedOpenMatches[2] > 0,
+    ...contractHelpers.getMatch(limitedActiveMatches[2] || 0),
   });
 
   const match4Data = useContractRead({
-    ...contractHelpers.getMatch(limitedOpenMatches[3] || 0),
-    enabled: limitedOpenMatches.length > 3 && limitedOpenMatches[3] > 0,
+    ...contractHelpers.getMatch(limitedActiveMatches[3] || 0),
   });
 
   const match5Data = useContractRead({
-    ...contractHelpers.getMatch(limitedOpenMatches[4] || 0),
-    enabled: limitedOpenMatches.length > 4 && limitedOpenMatches[4] > 0,
+    ...contractHelpers.getMatch(limitedActiveMatches[4] || 0),
   });
 
   // Process matches and map to API fixtures
   const processedMatches = useMemo(() => {
-    if (!limitedOpenMatches || limitedOpenMatches.length === 0 || !apiFixtures || apiFixtures.length === 0) {
+    if (!limitedActiveMatches || limitedActiveMatches.length === 0 || !apiFixtures || apiFixtures.length === 0) {
       return [];
     }
 
     const matches: Match[] = [];
     const matchDataResults = [match1Data, match2Data, match3Data, match4Data, match5Data];
 
-    limitedOpenMatches.forEach((matchId: number, index: number) => {
+    limitedActiveMatches.forEach((matchId: number, index: number) => {
       const matchResult = matchDataResults[index];
       
       if (!matchResult.data || matchResult.isLoading || matchResult.error) return;
@@ -95,11 +90,15 @@ export const useOpenMatchesWithFixtures = () => {
       const match: Match = {
         id: matchId.toString(),
         creator: matchData.creator,
+        joiner: matchData.joiner,
         stake: matchData.stakeAmount.toString(),
         fixtureId: Number(matchData.fixtureId),
         fixture,
         creatorPrediction: matchData.creatorPrediction === 0 ? 'home' : 
                           matchData.creatorPrediction === 1 ? 'draw' : 'away',
+        joinerPrediction: matchData.joinerPrediction === 0 ? 'home' :
+                          matchData.joinerPrediction === 1 ? 'draw' :
+                          matchData.joinerPrediction === 2 ? 'away' : undefined,
         settled: matchData.isSettled,
         status: matchData.status === 0 ? 'open' : 
                matchData.status === 1 ? 'active' : 'completed',
@@ -110,20 +109,20 @@ export const useOpenMatchesWithFixtures = () => {
     });
 
     return matches;
-  }, [limitedOpenMatches, apiFixtures, match1Data.data, match2Data.data, match3Data.data, match4Data.data, match5Data.data, getTeamLogo]);
+  }, [limitedActiveMatches, apiFixtures, match1Data, match2Data, match3Data, match4Data, match5Data, getTeamLogo]);
 
   // Only consider loading/error states for matches that are actually being fetched
   const activeMatchData = [match1Data, match2Data, match3Data, match4Data, match5Data].filter((_, index) => 
-    limitedOpenMatches.length > index && limitedOpenMatches[index] > 0
+    limitedActiveMatches.length > index && limitedActiveMatches[index] > 0
   );
   
   const isLoading = activeMatchData.some(match => match.isLoading) || fixturesLoading;
   const hasError = activeMatchData.some(match => match.error) || fixturesError;
 
   // Debug logging
-  console.log('useOpenMatchesWithFixtures debug:', {
-    openMatches,
-    limitedOpenMatches,
+  console.log('useActiveMatchesWithFixtures debug:', {
+    activeMatches,
+    limitedActiveMatches,
     apiFixtures: apiFixtures?.length,
     fixturesLoading,
     fixturesError,
@@ -137,6 +136,6 @@ export const useOpenMatchesWithFixtures = () => {
     matches: processedMatches,
     isLoading,
     error: hasError,
-    openMatchesCount: openMatches?.length || 0,
+  activeMatchesCount: Array.isArray(activeMatches) ? activeMatches.length : 0,
   };
 };

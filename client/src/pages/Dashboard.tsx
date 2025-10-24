@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAccount } from 'wagmi';
 import Navbar from '@/components/Navbar';
@@ -12,6 +12,8 @@ import { Match, PredictionType } from '@/types/match';
 import { toast } from 'sonner';
 import { useMatches, useToken, useMatch } from '@/hooks/useContracts';
 import { useOpenMatchesWithFixtures } from '@/hooks/useOpenMatchesWithFixtures';
+import { useActiveMatchesWithFixtures } from '@/hooks/useActiveMatchesWithFixtures';
+import { useCompletedMatchesWithFixtures } from '@/hooks/useCompletedMatchesWithFixtures';
 import { Prediction } from '@/lib/contracts';
 
 const Dashboard = () => {
@@ -20,22 +22,34 @@ const Dashboard = () => {
   
   // Smart contract hooks
   const { balance, allowance, approve, isApproving } = useToken();
-  const { activeMatches, completedMatches, userStats } = useMatches();
-  const { matches: blockchainMatches, isLoading: matchesLoading, error: matchesError, openMatchesCount } = useOpenMatchesWithFixtures();
+  const { userStats } = useMatches();
+  
+  // Custom hooks for matches with fixtures
+  const { matches: openMatches, isLoading: openMatchesLoading, error: openMatchesError, openMatchesCount } = useOpenMatchesWithFixtures();
+  const { matches: activeMatches, isLoading: activeMatchesLoading, error: activeMatchesError, activeMatchesCount } = useActiveMatchesWithFixtures();
+  const { matches: completedMatches, isLoading: completedMatchesLoading, error: completedMatchesError, completedMatchesCount } = useCompletedMatchesWithFixtures();
+  
   const [selectedMatchId, setSelectedMatchId] = useState<number>(0);
   const match = useMatch(selectedMatchId);
 
-  console.log('blockchainMatches from custom hook:', blockchainMatches);
+  console.log('Dashboard debug:', {
+    openMatches: openMatches?.length,
+    openMatchesLoading,
+    openMatchesError,
+    activeMatches: activeMatches?.length,
+    completedMatches: completedMatches?.length,
+    isConnected
+  });
   
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedMatch, setSelectedMatch] = useState<Match | null>(null);
   const [joinModalOpen, setJoinModalOpen] = useState(false);
 
   const handleJoinClick = (matchId: string) => {
-    // Find the blockchain match
-    const blockchainMatch = blockchainMatches.find((m) => m.id === matchId);
-    if (blockchainMatch) {
-      setSelectedMatch(blockchainMatch);
+    // Find the open match
+    const openMatch = openMatches.find((m) => m.id === matchId);
+    if (openMatch) {
+      setSelectedMatch(openMatch);
       setSelectedMatchId(parseInt(matchId));
       setJoinModalOpen(true);
     }
@@ -48,12 +62,43 @@ const Dashboard = () => {
     }
 
     try {
+      // Find the match to get stake amount
+      const selectedMatch = openMatches.find(m => m.id === matchId);
+      if (!selectedMatch) {
+        toast.error('Match not found');
+        return;
+      }
+
       // Convert prediction type to contract enum
       const contractPrediction = prediction === 'home' ? Prediction.HOME : 
                                prediction === 'draw' ? Prediction.DRAW : 
                                Prediction.AWAY;
 
-      // Join the match using smart contract
+      // Convert stake to wei
+      const stakeAmount = BigInt(selectedMatch.stake);
+      
+      // Step 1: Check current allowance
+      const currentAllowance = allowance ? BigInt(allowance.toString()) : 0n;
+      
+      // Step 2: If allowance is insufficient, approve first
+      if (currentAllowance < stakeAmount) {
+        toast.info('Approving tokens for match joining...');
+        
+        try {
+          await approve(stakeAmount);
+          toast.success('Tokens approved successfully!');
+          
+          // Wait a moment for the approval transaction to be mined
+          await new Promise(resolve => setTimeout(resolve, 3000));
+        } catch (approveError) {
+          console.error('Failed to approve tokens:', approveError);
+          toast.error('Failed to approve tokens. Please try again.');
+          return;
+        }
+      }
+
+      // Step 3: Join the match
+      toast.info('Joining match...');
       await match.joinMatch(contractPrediction);
       
       toast.success('Match joined successfully!', {
@@ -61,19 +106,43 @@ const Dashboard = () => {
       });
     } catch (error) {
       console.error('Failed to join match:', error);
-      toast.error('Failed to join match. Please try again.');
+      
+      // More specific error messages
+      if (error.message?.includes('dropped') || error.message?.includes('replaced')) {
+        toast.error('Transaction was dropped. Please try again with higher gas or wait for network congestion to clear.');
+      } else if (error.message?.includes('insufficient')) {
+        toast.error('Insufficient funds or gas. Please check your balance and try again.');
+      } else {
+        toast.error('Failed to join match. Please try again.');
+      }
     }
   };
 
-  // Filter blockchain matches based on search query
-  const filteredMatches = blockchainMatches.filter(
+  // Filter matches based on search query
+  const filteredOpenMatches = openMatches.filter(
     (match) =>
       match.fixture.homeTeam.toLowerCase().includes(searchQuery.toLowerCase()) ||
       match.fixture.awayTeam.toLowerCase().includes(searchQuery.toLowerCase()) ||
       match.fixture.league.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  console.log('filteredMatches:', filteredMatches);
+  const filteredActiveMatches = activeMatches.filter(
+    (match) =>
+      match.fixture.homeTeam.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      match.fixture.awayTeam.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      match.fixture.league.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const filteredCompletedMatches = completedMatches.filter(
+    (match) =>
+      match.fixture.homeTeam.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      match.fixture.awayTeam.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      match.fixture.league.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  console.log('filteredOpenMatches:', filteredOpenMatches);
+  console.log('filteredActiveMatches:', filteredActiveMatches);
+  console.log('filteredCompletedMatches:', filteredCompletedMatches);
 
   return (
     <div className="min-h-screen bg-background">
@@ -146,10 +215,10 @@ const Dashboard = () => {
               Open Matches ({openMatchesCount})
             </TabsTrigger>
             <TabsTrigger value="active">
-              Active Matches {activeMatches && `(${activeMatches.length})`}
+              Active Matches ({activeMatchesCount})
             </TabsTrigger>
             <TabsTrigger value="completed">
-              Completed {completedMatches && `(${completedMatches.length})`}
+              Completed ({completedMatchesCount})
             </TabsTrigger>
           </TabsList>
 
@@ -162,21 +231,23 @@ const Dashboard = () => {
                   Connect your wallet to view and join matches
                 </p>
               </div>
-            ) : matchesLoading ? (
+            ) : openMatchesLoading ? (
               <div className="text-center py-12 text-muted-foreground">
-                Loading blockchain matches...
+                Loading open matches...
               </div>
-            ) : matchesError ? (
+            ) : openMatchesError ? (
               <div className="text-center py-12 text-muted-foreground">
-                Error loading matches. Please try again.
+                Error loading open matches. Please try again.
+                <br />
+                <small className="text-xs">Debug: {JSON.stringify(openMatchesError)}</small>
               </div>
-            ) : filteredMatches.length === 0 ? (
+            ) : filteredOpenMatches.length === 0 ? (
               <div className="text-center py-12 text-muted-foreground">
                 No open matches available. Create one to get started!
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {filteredMatches.map((match) => (
+                {filteredOpenMatches.map((match) => (
                     <MatchCard
                       key={match.id}
                       match={match}
@@ -188,15 +259,23 @@ const Dashboard = () => {
           </TabsContent>
 
           <TabsContent value="active" className="space-y-4">
-            {filteredMatches.filter((m) => m.status === 'active').length === 0 ? (
+            {activeMatchesLoading ? (
+              <div className="text-center py-12 text-muted-foreground">
+                Loading active matches...
+              </div>
+            ) : activeMatchesError ? (
+              <div className="text-center py-12 text-muted-foreground">
+                Error loading active matches. Please try again.
+                <br />
+                <small className="text-xs">Debug: {JSON.stringify(activeMatchesError)}</small>
+              </div>
+            ) : filteredActiveMatches.length === 0 ? (
               <div className="text-center py-12 text-muted-foreground">
                 No active matches at the moment.
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {filteredMatches
-                  .filter((m) => m.status === 'active')
-                  .map((match) => (
+                {filteredActiveMatches.map((match) => (
                     <MatchCard
                       key={match.id}
                       match={match}
@@ -208,15 +287,23 @@ const Dashboard = () => {
           </TabsContent>
 
           <TabsContent value="completed" className="space-y-4">
-            {filteredMatches.filter((m) => m.status === 'completed').length === 0 ? (
+            {completedMatchesLoading ? (
+              <div className="text-center py-12 text-muted-foreground">
+                Loading completed matches...
+              </div>
+            ) : completedMatchesError ? (
+              <div className="text-center py-12 text-muted-foreground">
+                Error loading completed matches. Please try again.
+                <br />
+                <small className="text-xs">Debug: {JSON.stringify(completedMatchesError)}</small>
+              </div>
+            ) : filteredCompletedMatches.length === 0 ? (
               <div className="text-center py-12 text-muted-foreground">
                 No completed matches yet.
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {filteredMatches
-                  .filter((m) => m.status === 'completed')
-                  .map((match) => (
+                {filteredCompletedMatches.map((match) => (
                     <MatchCard
                       key={match.id}
                       match={match}

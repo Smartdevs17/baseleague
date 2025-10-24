@@ -105,7 +105,7 @@ const CreateMatch = () => {
       });
       
       setTimeout(() => {
-        navigate('/my-matches');
+        navigate('/');
       }, 1500);
       
     } catch (error) {

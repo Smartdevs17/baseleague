@@ -6,11 +6,11 @@ import { useUpcomingFixturesQuery } from './useFixtures';
 import { useTeamLogos } from './useTeamLogos';
 import { Match, Fixture } from '@/types/match';
 
-// Custom hook to fetch all open matches and map them to API fixtures
-export const useOpenMatchesWithFixtures = () => {
-  // Get open matches from blockchain
-  const { data: openMatches } = useContractRead({
-    ...contractHelpers.getOpenMatches(),
+// Custom hook to fetch all completed matches and map them to API fixtures
+export const useCompletedMatchesWithFixtures = () => {
+  // Get completed matches from blockchain
+  const { data: completedMatches } = useContractRead({
+    ...contractHelpers.getCompletedMatches(),
   });
 
   // Get upcoming fixtures from API
@@ -20,47 +20,47 @@ export const useOpenMatchesWithFixtures = () => {
   // For now, let's limit to first 5 matches to avoid hook rule violations
   // We'll need to implement a different approach for dynamic match fetching
   const maxMatches = 5;
-  const limitedOpenMatches = useMemo(() => {
-    if (!openMatches || openMatches.length === 0) return [];
-    return openMatches.slice(0, maxMatches);
-  }, [openMatches]);
+  const limitedCompletedMatches = useMemo(() => {
+    if (!completedMatches || completedMatches.length === 0) return [];
+    return completedMatches.slice(0, maxMatches);
+  }, [completedMatches]);
 
   // Individual contract reads for each match (limited to avoid hook rule violations)
   const match1Data = useContractRead({
-    ...contractHelpers.getMatch(limitedOpenMatches[0] || 0),
-    enabled: limitedOpenMatches.length > 0 && limitedOpenMatches[0] > 0,
+    ...contractHelpers.getMatch(limitedCompletedMatches[0] || 0),
+    enabled: limitedCompletedMatches.length > 0,
   });
 
   const match2Data = useContractRead({
-    ...contractHelpers.getMatch(limitedOpenMatches[1] || 0),
-    enabled: limitedOpenMatches.length > 1 && limitedOpenMatches[1] > 0,
+    ...contractHelpers.getMatch(limitedCompletedMatches[1] || 0),
+    enabled: limitedCompletedMatches.length > 1,
   });
 
   const match3Data = useContractRead({
-    ...contractHelpers.getMatch(limitedOpenMatches[2] || 0),
-    enabled: limitedOpenMatches.length > 2 && limitedOpenMatches[2] > 0,
+    ...contractHelpers.getMatch(limitedCompletedMatches[2] || 0),
+    enabled: limitedCompletedMatches.length > 2,
   });
 
   const match4Data = useContractRead({
-    ...contractHelpers.getMatch(limitedOpenMatches[3] || 0),
-    enabled: limitedOpenMatches.length > 3 && limitedOpenMatches[3] > 0,
+    ...contractHelpers.getMatch(limitedCompletedMatches[3] || 0),
+    enabled: limitedCompletedMatches.length > 3,
   });
 
   const match5Data = useContractRead({
-    ...contractHelpers.getMatch(limitedOpenMatches[4] || 0),
-    enabled: limitedOpenMatches.length > 4 && limitedOpenMatches[4] > 0,
+    ...contractHelpers.getMatch(limitedCompletedMatches[4] || 0),
+    enabled: limitedCompletedMatches.length > 4,
   });
 
   // Process matches and map to API fixtures
   const processedMatches = useMemo(() => {
-    if (!limitedOpenMatches || limitedOpenMatches.length === 0 || !apiFixtures || apiFixtures.length === 0) {
+    if (!limitedCompletedMatches || limitedCompletedMatches.length === 0 || !apiFixtures || apiFixtures.length === 0) {
       return [];
     }
 
     const matches: Match[] = [];
     const matchDataResults = [match1Data, match2Data, match3Data, match4Data, match5Data];
 
-    limitedOpenMatches.forEach((matchId: number, index: number) => {
+    limitedCompletedMatches.forEach((matchId: number, index: number) => {
       const matchResult = matchDataResults[index];
       
       if (!matchResult.data || matchResult.isLoading || matchResult.error) return;
@@ -110,20 +110,20 @@ export const useOpenMatchesWithFixtures = () => {
     });
 
     return matches;
-  }, [limitedOpenMatches, apiFixtures, match1Data.data, match2Data.data, match3Data.data, match4Data.data, match5Data.data, getTeamLogo]);
+  }, [limitedCompletedMatches, apiFixtures, match1Data.data, match2Data.data, match3Data.data, match4Data.data, match5Data.data, getTeamLogo]);
 
   // Only consider loading/error states for matches that are actually being fetched
   const activeMatchData = [match1Data, match2Data, match3Data, match4Data, match5Data].filter((_, index) => 
-    limitedOpenMatches.length > index && limitedOpenMatches[index] > 0
+    limitedCompletedMatches.length > index && limitedCompletedMatches[index] > 0
   );
   
   const isLoading = activeMatchData.some(match => match.isLoading) || fixturesLoading;
   const hasError = activeMatchData.some(match => match.error) || fixturesError;
 
   // Debug logging
-  console.log('useOpenMatchesWithFixtures debug:', {
-    openMatches,
-    limitedOpenMatches,
+  console.log('useCompletedMatchesWithFixtures debug:', {
+    completedMatches,
+    limitedCompletedMatches,
     apiFixtures: apiFixtures?.length,
     fixturesLoading,
     fixturesError,
@@ -137,6 +137,6 @@ export const useOpenMatchesWithFixtures = () => {
     matches: processedMatches,
     isLoading,
     error: hasError,
-    openMatchesCount: openMatches?.length || 0,
+    completedMatchesCount: completedMatches?.length || 0,
   };
 };
