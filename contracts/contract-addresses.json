@@ -1,0 +1,8 @@
+{
+  "network": "celo-sepolia",
+  "chainId": "11142220",
+  "CustomResultsOracle": "0x816B6a402cC26F0D5B3b28794061C75BC673490f",
+  "PredictionContract": "0xfBa3E093ad88Ad56abd90956Bc383898bb85e0b2",
+  "deployer": "0x575109e921C6d6a1Cb7cA60Be0191B10950AfA6C",
+  "timestamp": "2025-11-19T10:33:58.629Z"
+}
