@@ -1,6 +1,6 @@
 # Team Logo Integration
 
-This document explains how team logos are integrated into the SoccerLeague application.
+This document explains how team logos are integrated into the BaseLeague application.
 
 ## Overview
 

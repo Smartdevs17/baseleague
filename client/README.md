@@ -1,10 +1,10 @@
-# SoccerLeague
+# BaseLeague
 
 A decentralized fantasy football platform built on Base blockchain.
 
 ## Project Overview
 
-SoccerLeague is a Web3 fantasy football platform where users can compete head-to-head in fantasy football matches, stake $BLEAG tokens, predict outcomes, and win rewards on the Base blockchain.
+BaseLeague is a Web3 fantasy football platform where users can compete head-to-head in fantasy football matches, stake ETH, predict outcomes, and win rewards on the Base blockchain.
 
 ## Technologies Used
 
@@ -31,7 +31,7 @@ This project is built with:
 git clone <YOUR_GIT_URL>
 
 # Step 2: Navigate to the project directory
-cd soccerleague-play
+cd baseleague
 
 # Step 3: Install the necessary dependencies
 npm install
