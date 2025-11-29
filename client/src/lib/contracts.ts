@@ -1,28 +1,28 @@
-import CustomResultsOracleABI from '@/contracts/CustomResultsOracle.abi.json'
+import ResultsConsumerABI from '@/contracts/ResultsConsumer.abi.json'
 import PredictionContractABI from '@/contracts/PredictionContract.abi.json'
 import TokenABI from '@/contracts/token.json'
 import { config } from './config'
 
 // Contract addresses
 export const CONTRACTS = {
-	RESULTS_CONSUMER: (config.contracts.resultsConsumer as `0x${string}`) || '0x816B6a402cC26F0D5B3b28794061C75BC673490f', // CustomResultsOracle
-	PREDICTION_CONTRACT: (config.contracts.predictionContract as `0x${string}`) || '0xfBa3E093ad88Ad56abd90956Bc383898bb85e0b2',
+	RESULTS_CONSUMER: (config.contracts.resultsConsumer as `0x${string}`) || '0xaF404EA0C622c1bcd7ddca1DC866Ad2eAe248592', // Chainlink ResultsConsumer
+	PREDICTION_CONTRACT: (config.contracts.predictionContract as `0x${string}`) || '0xF6Ee0a3a8Ea1fE73D0DFfac8419bF676276D56cB',
 	BLEAG_TOKEN: (config.contracts.bleagToken as `0x${string}`) || '0x1234567890123456789012345678901234567890',
 } as const
 
 // Contract ABIs
 export const ABIS = {
-	RESULTS_CONSUMER: CustomResultsOracleABI,
+	RESULTS_CONSUMER: ResultsConsumerABI,
 	PREDICTION_CONTRACT: PredictionContractABI,
 	BLEAG_TOKEN: TokenABI,
 } as const
 
 // Network configuration
 export const NETWORK = {
-	name: 'Celo Sepolia',
-	chainId: 11142220,
+	name: 'Base Sepolia',
+	chainId: 84532,
 	rpcUrl: config.wallet.rpcUrl,
-	explorer: 'https://celo-sepolia.blockscout.com',
+	explorer: 'https://sepolia.basescan.org',
 } as const
 
 // Prediction types (matches contract enum)
