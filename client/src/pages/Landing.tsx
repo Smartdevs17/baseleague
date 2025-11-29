@@ -35,7 +35,7 @@ const Landing = () => {
     {
       icon: <Shield className="w-6 h-6" />,
       title: "Blockchain Security",
-      description: "Your bets are secured by Celo smart contracts with transparent, immutable records."
+      description: "Your bets are secured by Base smart contracts with transparent, immutable records."
     },
     {
       icon: <Zap className="w-6 h-6" />,
@@ -67,7 +67,7 @@ const Landing = () => {
   const stats = [
     { label: "Active Users", value: "2,847" },
     { label: "Matches Played", value: "12,394" },
-    { label: "Total Volume", value: "1,247 CELO" },
+    { label: "Total Volume", value: "1,247 ETH" },
     { label: "Avg Win Rate", value: "68%" }
   ];
 

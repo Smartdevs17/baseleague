@@ -281,7 +281,7 @@ export const useEthBalance = () => {
 		balance: balance?.value || 0n,
 		isLoading,
 		formatted: formatBalance(balance?.value, 3), // Show 3 decimal places
-		symbol: balance?.symbol || 'CELO', // Celo hackathon - show CELO
+		symbol: balance?.symbol || 'ETH', // Base Sepolia - show ETH
 	}
 }
 
