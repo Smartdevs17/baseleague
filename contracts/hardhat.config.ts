@@ -42,15 +42,15 @@ const config: HardhatUserConfig = {
 		currency: 'USD',
 	},
 	etherscan: {
-		apiKey: {
-			'base-sepolia': process.env.BASESCAN_API_KEY || '',
-			'sepolia': process.env.ETHERSCAN_API_KEY || '',
-		},
+		// Etherscan API V2 - use single API key format
+		// For Base Sepolia, BaseScan uses its own API
+		apiKey: process.env.BASESCAN_API_KEY || process.env.ETHERSCAN_API_KEY || '',
 		customChains: [
 			{
 				network: 'base-sepolia',
 				chainId: 84532,
 				urls: {
+					// BaseScan API endpoint (V2 compatible)
 					apiURL: 'https://api-sepolia.basescan.org/api',
 					browserURL: 'https://sepolia.basescan.org',
 				},

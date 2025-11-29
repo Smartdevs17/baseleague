@@ -82,8 +82,10 @@
 
 ## ✅ Verification Status
 
-- [ ] ResultsConsumer verified
-- [ ] PredictionContract verified
+- [x] ResultsConsumer verified ✅
+  - Verified at: https://sepolia.basescan.org/address/0xaF404EA0C622c1bcd7ddca1DC866Ad2eAe248592#code
+- [x] PredictionContract verified ✅
+  - Verified at: https://sepolia.basescan.org/address/0xF6Ee0a3a8Ea1fE73D0DFfac8419bF676276D56cB#code
 
 ---
 
