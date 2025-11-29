@@ -11,17 +11,17 @@ export const config = {
   // Wallet connection
   wallet: {
     projectId: import.meta.env.VITE_WALLETCONNECT_PROJECT_ID || 'demo-project-id',
-    chainId: import.meta.env.VITE_CHAIN_ID || '11142220', // Celo Sepolia
-    rpcUrl: import.meta.env.VITE_RPC_URL || 'https://forno.celo-sepolia.celo-testnet.org',
+    chainId: import.meta.env.VITE_CHAIN_ID || '84532', // Base Sepolia
+    rpcUrl: import.meta.env.VITE_RPC_URL || 'https://base-sepolia-rpc.publicnode.com',
   },
 
   // Smart contracts
   contracts: {
     bleagToken: import.meta.env.VITE_BLEAG_TOKEN_ADDRESS || '0x1234567890123456789012345678901234567890',
-    resultsConsumer: import.meta.env.VITE_RESULTS_CONSUMER_ADDRESS || '0x816B6a402cC26F0D5B3b28794061C75BC673490f', // CustomResultsOracle
-    predictionContract: import.meta.env.VITE_PREDICTION_CONTRACT_ADDRESS || '0xfBa3E093ad88Ad56abd90956Bc383898bb85e0b2',
+    resultsConsumer: import.meta.env.VITE_RESULTS_CONSUMER_ADDRESS || '0xaF404EA0C622c1bcd7ddca1DC866Ad2eAe248592', // Chainlink ResultsConsumer
+    predictionContract: import.meta.env.VITE_PREDICTION_CONTRACT_ADDRESS || '0xF6Ee0a3a8Ea1fE73D0DFfac8419bF676276D56cB',
     // Legacy support
-    matchManager: import.meta.env.VITE_MATCH_MANAGER_ADDRESS || import.meta.env.VITE_PREDICTION_CONTRACT_ADDRESS || '0xfBa3E093ad88Ad56abd90956Bc383898bb85e0b2',
+    matchManager: import.meta.env.VITE_MATCH_MANAGER_ADDRESS || import.meta.env.VITE_PREDICTION_CONTRACT_ADDRESS || '0xF6Ee0a3a8Ea1fE73D0DFfac8419bF676276D56cB',
   },
 
   // API configuration
