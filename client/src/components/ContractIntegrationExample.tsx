@@ -54,10 +54,10 @@ export const ContractIntegrationExample = () => {
 			return
 		}
 
-		// Check if user has enough CELO balance
+		// Check if user has enough ETH balance
 		const betAmountWei = parseEther(betAmount)
 		if (balance < betAmountWei) {
-			toast.error('Insufficient CELO balance')
+			toast.error('Insufficient ETH balance')
 			return
 		}
 
@@ -82,11 +82,11 @@ export const ContractIntegrationExample = () => {
 
 	return (
 		<div className="space-y-6">
-			{/* CELO Balance Information */}
+			{/* ETH Balance Information */}
 			<Card>
 				<CardHeader>
-					<CardTitle>CELO Balance</CardTitle>
-					<CardDescription>Your CELO balance for betting</CardDescription>
+					<CardTitle>ETH Balance</CardTitle>
+					<CardDescription>Your ETH balance for betting</CardDescription>
 				</CardHeader>
 				<CardContent className="space-y-4">
 					<div className="grid grid-cols-1 gap-4">
@@ -99,7 +99,7 @@ export const ContractIntegrationExample = () => {
 					</div>
 					{balance === 0n && (
 						<div className="p-3 bg-yellow-500/10 border border-yellow-500/30 rounded text-xs text-yellow-600">
-							⚠️ You need CELO to place bets. Get testnet CELO from a faucet.
+							⚠️ You need ETH to place bets. Get testnet ETH from a faucet.
 						</div>
 					)}
 				</CardContent>
@@ -202,7 +202,7 @@ export const ContractIntegrationExample = () => {
 						</div>
 					</div>
 					<div>
-						<Label htmlFor="bet-amount">Bet Amount (CELO)</Label>
+						<Label htmlFor="bet-amount">Bet Amount (ETH)</Label>
 						<Input
 							id="bet-amount"
 							type="number"
@@ -242,7 +242,7 @@ export const ContractIntegrationExample = () => {
 					</Button>
 					{balance === 0n && (
 						<p className="text-sm text-muted-foreground text-center">
-							You need CELO to place bets
+							You need ETH to place bets
 						</p>
 					)}
 				</CardContent>

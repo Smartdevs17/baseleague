@@ -183,7 +183,7 @@ const Leaderboard = () => {
                   </div>
                 </div>
                 <div className="pt-2">
-                  <div className="text-xl font-bold text-primary">{entry.earnings} CELO</div>
+                  <div className="text-xl font-bold text-primary">{entry.earnings} ETH</div>
                   <div className="text-xs text-muted-foreground">Total Earnings</div>
                 </div>
               </div>
@@ -254,7 +254,7 @@ const Leaderboard = () => {
                       </div>
                     </td>
                     <td className="p-4 text-right">
-                      <span className="text-sm font-bold text-primary">{entry.earnings} CELO</span>
+                      <span className="text-sm font-bold text-primary">{entry.earnings} ETH</span>
                     </td>
                   </tr>
                 ))}

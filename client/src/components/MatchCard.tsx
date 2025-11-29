@@ -54,7 +54,7 @@ const MatchCard = ({ match, onJoin, onView, showActions = true, currentUserAddre
           </div>
           <div className="text-right">
             <div className="text-2xl font-bold text-primary">
-              {formatEther(BigInt(match.stake) * 2n)} CELO
+              {formatEther(BigInt(match.stake) * 2n)} ETH
             </div>
             <div className="text-xs text-muted-foreground">Prize Pool</div>
           </div>
@@ -189,7 +189,7 @@ const MatchCard = ({ match, onJoin, onView, showActions = true, currentUserAddre
                     onClick={() => onJoin(match.id)}
                     className="flex-1 bg-gradient-to-r from-primary to-accent hover:opacity-90"
                   >
-                    Join Match ({formatEther(BigInt(match.stake))} CELO)
+                    Join Match ({formatEther(BigInt(match.stake))} ETH)
                   </Button>
                 )}
               </>

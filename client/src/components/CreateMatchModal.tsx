@@ -88,7 +88,7 @@ const CreateMatchModal = ({ open, onOpenChange, fixture, onConfirm }: CreateMatc
 
           {/* Stake Amount */}
           <div className="space-y-2">
-            <Label htmlFor="stake">Stake Amount (CELO)</Label>
+            <Label htmlFor="stake">Stake Amount (ETH)</Label>
             <Input
               id="stake"
               type="number"
@@ -100,7 +100,7 @@ const CreateMatchModal = ({ open, onOpenChange, fixture, onConfirm }: CreateMatc
               className="bg-input border-border"
             />
             <p className="text-xs text-muted-foreground">
-              Minimum: 0.000000000000000001 CELO (1 wei). Winner receives {parseFloat(stake || '0') * 2} CELO (minus platform fee)
+              Minimum: 0.000000000000000001 ETH (1 wei). Winner receives {parseFloat(stake || '0') * 2} ETH (minus platform fee)
             </p>
           </div>
 

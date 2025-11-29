@@ -22,7 +22,7 @@ const JoinMatchModal = ({ open, onOpenChange, match, onConfirm }: JoinMatchModal
   const [isJoining, setIsJoining] = useState(false);
   const { address } = useAccount();
   
-  // Get CELO balance
+  // Get ETH balance
   const { balance } = useEthBalance();
 
   // Prevent opening modal if user is the creator
@@ -78,7 +78,7 @@ const JoinMatchModal = ({ open, onOpenChange, match, onConfirm }: JoinMatchModal
         <DialogHeader>
           <DialogTitle className="text-xl">Join Match</DialogTitle>
           <DialogDescription>
-            Choose your prediction and stake {parseFloat(formatEther(BigInt(match.stake))).toFixed(3)} CELO
+            Choose your prediction and stake {parseFloat(formatEther(BigInt(match.stake))).toFixed(3)} ETH
           </DialogDescription>
         </DialogHeader>
 
@@ -193,15 +193,15 @@ const JoinMatchModal = ({ open, onOpenChange, match, onConfirm }: JoinMatchModal
             </div>
             <div className="grid grid-cols-1 gap-4 text-sm">
               <div>
-                <span className="text-muted-foreground">CELO Balance:</span>
+                <span className="text-muted-foreground">ETH Balance:</span>
                 <span className="ml-2 text-foreground font-semibold">
-                  {balance ? parseFloat(formatEther(balance)).toFixed(3) : '0'} CELO
+                  {balance ? parseFloat(formatEther(balance)).toFixed(3) : '0'} ETH
                 </span>
               </div>
             </div>
             {match && balance && balance < BigInt(match.stake) && (
               <div className="mt-3 p-2 bg-yellow-500/10 border border-yellow-500/30 rounded text-xs text-yellow-600">
-                ⚠️ Insufficient CELO balance. You need {parseFloat(formatEther(BigInt(match.stake))).toFixed(3)} CELO to join this match.
+                ⚠️ Insufficient ETH balance. You need {parseFloat(formatEther(BigInt(match.stake))).toFixed(3)} ETH to join this match.
               </div>
             )}
           </div>
@@ -209,7 +209,7 @@ const JoinMatchModal = ({ open, onOpenChange, match, onConfirm }: JoinMatchModal
           {/* Prize Info */}
           <div className="p-3 bg-success/10 border border-success/30 rounded-lg">
             <div className="text-sm font-medium text-success text-center">
-              Win {parseFloat(formatEther(BigInt(match.stake) * 2n)).toFixed(3)} CELO
+              Win {parseFloat(formatEther(BigInt(match.stake) * 2n)).toFixed(3)} ETH
             </div>
           </div>
 
