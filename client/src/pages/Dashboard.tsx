@@ -104,10 +104,10 @@ const Dashboard = () => {
       return;
     }
 
-    // Check if user has sufficient CELO balance
+    // Check if user has sufficient ETH balance
     if (balance === 0n) {
-      toast.error('Insufficient CELO balance', {
-        description: 'You need CELO to join a match. Please acquire some CELO first.'
+      toast.error('Insufficient ETH balance', {
+        description: 'You need ETH to join a match. Please acquire some ETH first.'
       });
       return;
     }
@@ -149,11 +149,11 @@ const Dashboard = () => {
         return;
       }
 
-      // Check if user has enough CELO for the stake amount
+      // Check if user has enough ETH for the stake amount
       const stakeAmount = BigInt(selectedMatch.stake);
       if (balance < stakeAmount) {
-        toast.error('Insufficient CELO balance', {
-          description: `You need at least ${parseFloat(formatEther(BigInt(selectedMatch.stake))).toFixed(3)} CELO to join this match.`
+        toast.error('Insufficient ETH balance', {
+          description: `You need at least ${parseFloat(formatEther(BigInt(selectedMatch.stake))).toFixed(3)} ETH to join this match.`
         });
         return;
       }
@@ -191,7 +191,7 @@ const Dashboard = () => {
         stakeAmountStr,
       });
 
-      // Place bet (sends CELO directly - no approval needed)
+      // Place bet (sends ETH directly - no approval needed)
       console.log('🔍 [handleJoinConfirm] Placing bet...', {
         gameweek,
         contractMatchId,
@@ -273,7 +273,7 @@ const Dashboard = () => {
               Welcome to SoccerLeague
             </h1>
             <p className="text-lg text-white/90 mb-6 max-w-2xl">
-              Compete head-to-head in fantasy football matches. Stake your CELO, predict match outcomes, and win big!
+              Compete head-to-head in fantasy football matches. Stake your ETH, predict match outcomes, and win big!
             </p>
             
             {/* Wallet connection status - simplified */}
@@ -289,15 +289,15 @@ const Dashboard = () => {
               </div>
             )}
 
-            {/* CELO balance warning */}
+            {/* ETH balance warning */}
             {isConnected && balance === 0n && (
               <div className="mb-6 p-4 bg-yellow-500/20 rounded-lg border border-yellow-500/30">
                 <div className="flex items-center gap-2">
                   <Wallet className="w-4 h-4 text-yellow-400" />
-                  <span className="text-sm font-medium text-yellow-400">No CELO Balance</span>
+                  <span className="text-sm font-medium text-yellow-400">No ETH Balance</span>
                 </div>
                 <p className="text-sm text-yellow-300 mt-1">
-                  You need CELO to create or join matches. Please acquire some CELO from a faucet.
+                  You need ETH to create or join matches. Please acquire some ETH from a faucet.
                 </p>
               </div>
             )}
@@ -414,10 +414,10 @@ const Dashboard = () => {
                 <div className="mb-4 p-4 bg-yellow-500/20 rounded-lg border border-yellow-500/30 max-w-md mx-auto">
                   <div className="flex items-center justify-center gap-2 mb-2">
                     <Wallet className="w-5 h-5 text-yellow-400" />
-                    <span className="text-sm font-medium text-yellow-400">No CELO Balance</span>
+                    <span className="text-sm font-medium text-yellow-400">No ETH Balance</span>
                   </div>
                   <p className="text-sm text-yellow-300">
-                    You need CELO to join matches. Please acquire some CELO from a faucet.
+                    You need ETH to join matches. Please acquire some ETH from a faucet.
                   </p>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 opacity-50">

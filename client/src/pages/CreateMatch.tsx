@@ -51,8 +51,8 @@ const CreateMatch = () => {
   const handleFixtureSelect = (fixture: ApiFixture) => {
     // Check if user has tokens before allowing fixture selection
     if (balance === 0n) {
-      toast.error('Insufficient CELO balance', {
-        description: 'You need CELO to create a match. Please acquire some CELO first.'
+      toast.error('Insufficient ETH balance', {
+        description: 'You need ETH to create a match. Please acquire some ETH first.'
       });
       return;
     }
@@ -72,10 +72,10 @@ const CreateMatch = () => {
       return;
     }
 
-    // Check if user has sufficient CELO balance
+    // Check if user has sufficient ETH balance
     if (balance === 0n) {
-      toast.error('Insufficient CELO balance', {
-        description: 'You need CELO to create a match. Please acquire some CELO first.'
+      toast.error('Insufficient ETH balance', {
+        description: 'You need ETH to create a match. Please acquire some ETH first.'
       });
       return;
     }
@@ -83,8 +83,8 @@ const CreateMatch = () => {
     // Check if stake amount is greater than available balance
     const stakeAmountWei = parseEther(stake);
     if (balance < stakeAmountWei) {
-      toast.error('Insufficient CELO balance', {
-        description: `You need at least ${stake} CELO to create this match.`
+      toast.error('Insufficient ETH balance', {
+        description: `You need at least ${stake} ETH to create this match.`
       });
       return;
     }
@@ -117,7 +117,7 @@ const CreateMatch = () => {
       const gameweek = 1;
       const matchId = parseInt(selectedFixture.externalId.toString()) || 1;
 
-      // Place bet (sends CELO directly - no approval needed)
+      // Place bet (sends ETH directly - no approval needed)
       console.log('🔍 [CreateMatch] Before placeBet call');
       console.log('  txHash from hook:', txHash);
       console.log('  isPending:', isPlacingBet);
@@ -324,7 +324,7 @@ const CreateMatch = () => {
               </div>
               <div className="grid grid-cols-1 gap-4 text-sm">
                 <div>
-                  <span className="text-muted-foreground">CELO Balance:</span>
+                  <span className="text-muted-foreground">ETH Balance:</span>
                   <span className="ml-2 text-foreground font-semibold">
                     {balanceFormatted} {symbol}
                   </span>
@@ -336,10 +336,10 @@ const CreateMatch = () => {
                 <div className="mt-3 p-3 bg-yellow-500/20 rounded-lg border border-yellow-500/30">
                   <div className="flex items-center gap-2">
                     <Wallet className="w-4 h-4 text-yellow-400" />
-                    <span className="text-sm font-medium text-yellow-400">No CELO Balance</span>
+                    <span className="text-sm font-medium text-yellow-400">No ETH Balance</span>
                   </div>
                   <p className="text-sm text-yellow-300 mt-1">
-                    You need CELO to create matches. Get testnet CELO from a faucet.
+                    You need ETH to create matches. Get testnet ETH from a faucet.
                   </p>
                 </div>
               )}

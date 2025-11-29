@@ -125,7 +125,7 @@ const MyMatches = () => {
               </div>
               <div>
                 <div className="text-2xl font-bold">{stats.totalEarnings}</div>
-                <div className="text-xs text-muted-foreground">Total Earnings (CELO)</div>
+                <div className="text-xs text-muted-foreground">Total Earnings (ETH)</div>
               </div>
             </div>
           </Card>
