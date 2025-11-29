@@ -17,11 +17,11 @@ BaseLeague is a Web3 fantasy football platform built on Base Sepolia Testnet tha
 **Alice** wants to bet on an upcoming Arsenal vs Chelsea match. She:
 1. Connects her wallet to BaseLeague on Base Sepolia
 2. Browses available matches on the Dashboard
-3. Creates a new match by selecting the fixture, staking 0.1 ETH, and predicting "Home Win" (Arsenal)
+3. Creates a new match by selecting the fixture, staking 0.005 ETH, and predicting "Home Win" (Arsenal)
 4. Waits for another user to join with the same stake and an opposing prediction
 
 **Bob** sees Alice's open match and:
-1. Joins the match by staking 0.1 ETH and predicting "Away Win" (Chelsea)
+1. Joins the match by staking 0.005 ETH and predicting "Away Win" (Chelsea)
 2. The match automatically moves to "Active Matches" once both bets are placed
 
 **After the match finishes:**
