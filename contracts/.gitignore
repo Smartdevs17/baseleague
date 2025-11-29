@@ -12,6 +12,7 @@ typechain-types/
 .env.test
 .env.sepolia
 .env.alfajores
+.env.base-sepolia
 
 # Node modules
 node_modules/

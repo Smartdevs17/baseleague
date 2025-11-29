@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import "./CustomResultsOracle.sol";
+import "./ResultsConsumer.sol";
 
 /**
  * @title PredictionContract
- * @notice Prediction/betting contract that consumes results from CustomResultsOracle
- * @dev This contract manages bets and settles them based on results from the oracle
+ * @notice Prediction/betting contract that consumes results from Chainlink Functions ResultsConsumer
+ * @dev This contract manages bets and settles them based on results from Chainlink Functions oracle
  */
 contract PredictionContract {
-	CustomResultsOracle public immutable resultsOracle;
+	ResultsConsumer public immutable resultsConsumer;
 
 	// Bet structure
 	struct Bet {
@@ -74,10 +74,10 @@ contract PredictionContract {
 
 	/**
 	 * @notice Constructor
-	 * @param _resultsOracle Address of the CustomResultsOracle contract
+	 * @param _resultsConsumer Address of the ResultsConsumer contract (Chainlink Functions)
 	 */
-	constructor(address _resultsOracle) {
-		resultsOracle = CustomResultsOracle(_resultsOracle);
+	constructor(address _resultsConsumer) {
+		resultsConsumer = ResultsConsumer(_resultsConsumer);
 	}
 
 	/**
@@ -124,8 +124,8 @@ contract PredictionContract {
 		uint256 gameweek,
 		uint256 matchId
 	) external {
-		// Check if match result has been fulfilled by the oracle
-		if (!resultsOracle.hasOutcome(gameweek, matchId)) {
+		// Check if match result has been fulfilled by Chainlink Functions
+		if (!resultsConsumer.hasOutcome(gameweek, matchId)) {
 			revert MatchNotFulfilled(gameweek, matchId);
 		}
 
@@ -134,8 +134,8 @@ contract PredictionContract {
 			revert MatchAlreadySettled(gameweek, matchId);
 		}
 
-		// Get the match outcome from CustomResultsOracle
-		CustomResultsOracle.MatchOutcome memory outcome = resultsOracle.getOutcome(
+		// Get the match outcome from ResultsConsumer (Chainlink Functions)
+		ResultsConsumer.MatchOutcome memory outcome = resultsConsumer.getOutcome(
 			gameweek,
 			matchId
 		);

@@ -86,8 +86,8 @@ contract ResultsConsumer is FunctionsClient, ConfirmedOwner {
 
 	/**
 	 * @notice Constructor
-	 * @param router Chainlink Functions Router address for Celo Sepolia Testnet
-	 * @param donId DON ID for the Functions DON on Celo Sepolia
+	 * @param router Chainlink Functions Router address for Base Sepolia Testnet
+	 * @param donId DON ID for the Functions DON on Base Sepolia
 	 */
 	constructor(
 		address router,
