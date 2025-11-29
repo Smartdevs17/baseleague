@@ -28,42 +28,42 @@ const Terms = () => {
             <section>
               <h2 className="text-xl font-semibold text-foreground mb-3">1. Acceptance of Terms</h2>
               <p>
-                By accessing and using SoccerLeague, you accept and agree to be bound by the terms and provision of this agreement.
+                By accessing and using BaseLeague, you accept and agree to be bound by the terms and provision of this agreement.
               </p>
             </section>
 
             <section>
               <h2 className="text-xl font-semibold text-foreground mb-3">2. Use License</h2>
               <p>
-                Permission is granted to temporarily use SoccerLeague for personal, non-commercial transitory viewing only. This is the grant of a license, not a transfer of title.
+                Permission is granted to temporarily use BaseLeague for personal, non-commercial transitory viewing only. This is the grant of a license, not a transfer of title.
               </p>
             </section>
 
             <section>
               <h2 className="text-xl font-semibold text-foreground mb-3">3. Disclaimer</h2>
               <p>
-                The materials on SoccerLeague are provided on an 'as is' basis. SoccerLeague makes no warranties, expressed or implied, and hereby disclaims and negates all other warranties including without limitation, implied warranties or conditions of merchantability, fitness for a particular purpose, or non-infringement of intellectual property or other violation of rights.
+                The materials on BaseLeague are provided on an 'as is' basis. BaseLeague makes no warranties, expressed or implied, and hereby disclaims and negates all other warranties including without limitation, implied warranties or conditions of merchantability, fitness for a particular purpose, or non-infringement of intellectual property or other violation of rights.
               </p>
             </section>
 
             <section>
               <h2 className="text-xl font-semibold text-foreground mb-3">4. Limitations</h2>
               <p>
-                In no event shall SoccerLeague or its suppliers be liable for any damages (including, without limitation, damages for loss of data or profit, or due to business interruption) arising out of the use or inability to use the materials on SoccerLeague.
+                In no event shall BaseLeague or its suppliers be liable for any damages (including, without limitation, damages for loss of data or profit, or due to business interruption) arising out of the use or inability to use the materials on BaseLeague.
               </p>
             </section>
 
             <section>
               <h2 className="text-xl font-semibold text-foreground mb-3">5. Accuracy of Materials</h2>
               <p>
-                The materials appearing on SoccerLeague could include technical, typographical, or photographic errors. SoccerLeague does not warrant that any of the materials on its platform are accurate, complete, or current.
+                The materials appearing on BaseLeague could include technical, typographical, or photographic errors. BaseLeague does not warrant that any of the materials on its platform are accurate, complete, or current.
               </p>
             </section>
 
             <section>
               <h2 className="text-xl font-semibold text-foreground mb-3">6. Modifications</h2>
               <p>
-                SoccerLeague may revise these terms of service at any time without notice. By using this platform you are agreeing to be bound by the then current version of these terms of service.
+                BaseLeague may revise these terms of service at any time without notice. By using this platform you are agreeing to be bound by the then current version of these terms of service.
               </p>
             </section>
 

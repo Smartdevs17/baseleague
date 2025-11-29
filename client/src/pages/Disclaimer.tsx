@@ -31,14 +31,14 @@ const Disclaimer = () => {
             <section className="p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
               <h2 className="text-xl font-semibold text-foreground mb-3">Important Notice</h2>
               <p>
-                SoccerLeague is a decentralized betting platform built on blockchain technology. Please read this disclaimer carefully before using our services.
+                BaseLeague is a decentralized betting platform built on blockchain technology. Please read this disclaimer carefully before using our services.
               </p>
             </section>
 
             <section>
               <h2 className="text-xl font-semibold text-foreground mb-3">1. No Financial Advice</h2>
               <p>
-                SoccerLeague does not provide financial, investment, or legal advice. All betting decisions are made at your own discretion and risk.
+                BaseLeague does not provide financial, investment, or legal advice. All betting decisions are made at your own discretion and risk.
               </p>
             </section>
 
@@ -52,42 +52,42 @@ const Disclaimer = () => {
             <section>
               <h2 className="text-xl font-semibold text-foreground mb-3">3. Regulatory Compliance</h2>
               <p>
-                It is your responsibility to ensure that your use of SoccerLeague complies with all applicable laws and regulations in your jurisdiction. Some jurisdictions may prohibit or restrict online betting.
+                It is your responsibility to ensure that your use of BaseLeague complies with all applicable laws and regulations in your jurisdiction. Some jurisdictions may prohibit or restrict online betting.
               </p>
             </section>
 
             <section>
               <h2 className="text-xl font-semibold text-foreground mb-3">4. Blockchain Risks</h2>
               <p>
-                SoccerLeague operates on blockchain networks which are subject to various risks including but not limited to: network congestion, smart contract vulnerabilities, and potential loss of funds due to technical issues.
+                BaseLeague operates on blockchain networks which are subject to various risks including but not limited to: network congestion, smart contract vulnerabilities, and potential loss of funds due to technical issues.
               </p>
             </section>
 
             <section>
               <h2 className="text-xl font-semibold text-foreground mb-3">5. No Guarantees</h2>
               <p>
-                SoccerLeague makes no guarantees regarding the accuracy of match results, availability of the platform, or the outcome of any bets. All results are determined by external data sources and smart contract logic.
+                BaseLeague makes no guarantees regarding the accuracy of match results, availability of the platform, or the outcome of any bets. All results are determined by external data sources and smart contract logic.
               </p>
             </section>
 
             <section>
               <h2 className="text-xl font-semibold text-foreground mb-3">6. Wallet Security</h2>
               <p>
-                You are solely responsible for the security of your wallet and private keys. SoccerLeague is not responsible for any loss of funds due to compromised wallets, lost private keys, or unauthorized access.
+                You are solely responsible for the security of your wallet and private keys. BaseLeague is not responsible for any loss of funds due to compromised wallets, lost private keys, or unauthorized access.
               </p>
             </section>
 
             <section>
               <h2 className="text-xl font-semibold text-foreground mb-3">7. Age Restrictions</h2>
               <p>
-                You must be of legal age in your jurisdiction to use SoccerLeague. By using this platform, you represent that you meet all age and legal requirements.
+                You must be of legal age in your jurisdiction to use BaseLeague. By using this platform, you represent that you meet all age and legal requirements.
               </p>
             </section>
 
             <section>
               <h2 className="text-xl font-semibold text-foreground mb-3">8. Limitation of Liability</h2>
               <p>
-                To the maximum extent permitted by law, SoccerLeague and its operators shall not be liable for any indirect, incidental, special, consequential, or punitive damages, or any loss of profits or revenues.
+                To the maximum extent permitted by law, BaseLeague and its operators shall not be liable for any indirect, incidental, special, consequential, or punitive damages, or any loss of profits or revenues.
               </p>
             </section>
           </div>

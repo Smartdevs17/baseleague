@@ -28,7 +28,7 @@ const Privacy = () => {
             <section>
               <h2 className="text-xl font-semibold text-foreground mb-3">1. Information We Collect</h2>
               <p>
-                SoccerLeague is a decentralized application built on blockchain technology. We do not collect, store, or process personal information. All transactions are conducted directly through your Web3 wallet on the blockchain.
+                BaseLeague is a decentralized application built on blockchain technology. We do not collect, store, or process personal information. All transactions are conducted directly through your Web3 wallet on the blockchain.
               </p>
             </section>
 
@@ -42,7 +42,7 @@ const Privacy = () => {
             <section>
               <h2 className="text-xl font-semibold text-foreground mb-3">3. Wallet Information</h2>
               <p>
-                When you connect your wallet to SoccerLeague, we do not have access to your private keys or wallet contents. Wallet connections are handled securely through your wallet provider (MetaMask, WalletConnect, etc.).
+                When you connect your wallet to BaseLeague, we do not have access to your private keys or wallet contents. Wallet connections are handled securely through your wallet provider (MetaMask, WalletConnect, etc.).
               </p>
             </section>
 
@@ -56,14 +56,14 @@ const Privacy = () => {
             <section>
               <h2 className="text-xl font-semibold text-foreground mb-3">5. Third-Party Services</h2>
               <p>
-                SoccerLeague integrates with third-party services including wallet providers and blockchain networks. Please review their privacy policies for information on how they handle your data.
+                BaseLeague integrates with third-party services including wallet providers and blockchain networks. Please review their privacy policies for information on how they handle your data.
               </p>
             </section>
 
             <section>
               <h2 className="text-xl font-semibold text-foreground mb-3">6. Data Security</h2>
               <p>
-                As a decentralized application, SoccerLeague leverages blockchain security. However, you are responsible for securing your wallet and private keys. We are not responsible for any loss of funds due to compromised wallets.
+                As a decentralized application, BaseLeague leverages blockchain security. However, you are responsible for securing your wallet and private keys. We are not responsible for any loss of funds due to compromised wallets.
               </p>
             </section>
 
