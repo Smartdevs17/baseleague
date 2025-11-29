@@ -1,8 +1,13 @@
 {
-  "network": "celo-sepolia",
-  "chainId": "11142220",
-  "CustomResultsOracle": "0x816B6a402cC26F0D5B3b28794061C75BC673490f",
-  "PredictionContract": "0xfBa3E093ad88Ad56abd90956Bc383898bb85e0b2",
+  "network": "base-sepolia",
+  "chainId": "84532",
+  "ResultsConsumer": "0xaF404EA0C622c1bcd7ddca1DC866Ad2eAe248592",
+  "PredictionContract": "0xF6Ee0a3a8Ea1fE73D0DFfac8419bF676276D56cB",
   "deployer": "0x575109e921C6d6a1Cb7cA60Be0191B10950AfA6C",
-  "timestamp": "2025-11-19T10:33:58.629Z"
+  "timestamp": "2025-11-29T22:00:00.000Z",
+  "chainlink": {
+    "router": "0xf9B8fc078197181C841c296C876945aaa425B278",
+    "donId": "fun-base-sepolia-1",
+    "subscriptionId": "523"
+  }
 }
