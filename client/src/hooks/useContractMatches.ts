@@ -8,7 +8,7 @@ import { useAccount, useReadContract, usePublicClient } from 'wagmi'
 import { CONTRACTS, ABIS } from '@/lib/contracts'
 import { formatEther } from 'viem'
 import { Match } from '@/types/match'
-import { useUpcomingFixturesQuery } from '@/hooks/useMockData'
+import { useFixtures } from '@/hooks/useFixtures'
 import { useTeamLogos } from '@/hooks/useTeamLogos'
 import { ApiFixture } from '@/store/fixtures'
 
@@ -41,7 +41,7 @@ interface MatchData {
 export const useContractMatches = () => {
 	const { address, isConnected } = useAccount()
 	const publicClient = usePublicClient()
-	const { fixtures } = useUpcomingFixturesQuery()
+	const { fixtures } = useFixtures()
 	const { getTeamLogo } = useTeamLogos()
 	const [bets, setBets] = useState<BetData[]>([])
 	const [isLoading, setIsLoading] = useState(false)

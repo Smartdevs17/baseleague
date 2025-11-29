@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Search, Calendar, Clock, Wallet } from 'lucide-react';
 import { Fixture, PredictionType } from '@/types/match';
 import { toast } from 'sonner';
-import { useUpcomingFixturesQuery } from '@/hooks/useMockData';
+import { useUpcomingFixtures } from '@/hooks/useFixtures';
 import { useTeamLogos } from '@/hooks/useTeamLogos';
 import { preloadTeamLogos } from '@/utils/logoPreloader';
 import { useAccount } from 'wagmi';
@@ -23,8 +23,8 @@ const CreateMatch = () => {
   const navigate = useNavigate();
   const { address, isConnected } = useAccount();
   
-  // Mock hooks for fixtures (still using mock for now - replace with real API later)
-  const { fixtures, loading, error } = useUpcomingFixturesQuery();
+  // Fetch fixtures from API with actual match times
+  const { fixtures, loading, error } = useUpcomingFixtures();
   const { getTeamLogo } = useTeamLogos();
   
   // Real contract hooks - using ETH instead of tokens
