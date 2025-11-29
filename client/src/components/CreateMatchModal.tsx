@@ -15,7 +15,7 @@ interface CreateMatchModalProps {
 }
 
 const CreateMatchModal = ({ open, onOpenChange, fixture, onConfirm }: CreateMatchModalProps) => {
-  const [stake, setStake] = useState('50');
+  const [stake, setStake] = useState('0.005');
   const [prediction, setPrediction] = useState<PredictionType>('home');
   const [isCreating, setIsCreating] = useState(false);
 
@@ -23,7 +23,7 @@ const CreateMatchModal = ({ open, onOpenChange, fixture, onConfirm }: CreateMatc
   useEffect(() => {
     if (open) {
       setPrediction('home');
-      setStake('50');
+      setStake('0.005');
       console.log('🔍 [CreateMatchModal] Modal opened, reset prediction to:', 'home');
     }
   }, [open]);
@@ -48,7 +48,7 @@ const CreateMatchModal = ({ open, onOpenChange, fixture, onConfirm }: CreateMatc
     try {
       await onConfirm(stake, prediction);
       onOpenChange(false);
-      setStake('50');
+      setStake('0.005');
       setPrediction('home');
     } finally {
       setIsCreating(false);

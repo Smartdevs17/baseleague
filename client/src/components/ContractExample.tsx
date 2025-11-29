@@ -12,7 +12,7 @@ const ContractExample = () => {
   const { balance, allowance, approve, isApproving } = useToken();
   const { openMatches, activeMatches, userMatches, userStats } = useMatches();
   const [selectedMatchId, setSelectedMatchId] = useState<number>(0);
-  const [stakeAmount, setStakeAmount] = useState<string>('100');
+  const [stakeAmount, setStakeAmount] = useState<string>('0.005');
   const [prediction, setPrediction] = useState<number>(0); // 0 = home, 1 = draw, 2 = away
 
   const match = useMatch(selectedMatchId);

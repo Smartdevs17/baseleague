@@ -126,7 +126,7 @@ export const mockOpenMatches: Match[] = [
 	{
 		id: '1',
 		creator: '0x1234567890123456789012345678901234567890',
-		stake: '50000000000000000000', // 50 tokens
+		stake: '5000000000000000', // 0.005 ETH
 		fixtureId: 12345,
 		fixture: {
 			id: 12345,
@@ -146,7 +146,7 @@ export const mockOpenMatches: Match[] = [
 	{
 		id: '2',
 		creator: '0xabcdefabcdefabcdefabcdefabcdefabcdefabcd',
-		stake: '100000000000000000000', // 100 tokens
+		stake: '5000000000000000', // 0.005 ETH
 		fixtureId: 12346,
 		fixture: {
 			id: 12346,
@@ -170,7 +170,7 @@ export const mockActiveMatches: Match[] = [
 		id: '3',
 		creator: '0x9876543210987654321098765432109876543210',
 		joiner: '0xfedcbafedcbafedcbafedcbafedcbafedcbafed',
-		stake: '75000000000000000000', // 75 tokens
+		stake: '5000000000000000', // 0.005 ETH
 		fixtureId: 12347,
 		fixture: {
 			id: 12347,
@@ -195,7 +195,7 @@ export const mockCompletedMatches: Match[] = [
 		id: '4',
 		creator: '0x5555555555555555555555555555555555555555',
 		joiner: '0x6666666666666666666666666666666666666666',
-		stake: '50000000000000000000', // 50 tokens
+		stake: '5000000000000000', // 0.005 ETH
 		fixtureId: 12348,
 		fixture: {
 			id: 12348,
@@ -222,8 +222,8 @@ export const mockUserStats = {
 	totalMatches: 5,
 	wins: 3,
 	losses: 2,
-	totalStaked: '250000000000000000000', // 250 tokens
-	totalWinnings: '150000000000000000000', // 150 tokens
+	totalStaked: '25000000000000000', // 0.025 ETH (5 matches * 0.005 ETH)
+	totalWinnings: '15000000000000000', // 0.015 ETH
 	winRate: 60,
 }
 
