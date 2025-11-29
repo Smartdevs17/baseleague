@@ -147,7 +147,7 @@ const ContractExample = () => {
               type="number"
               value={stakeAmount}
               onChange={(e) => setStakeAmount(e.target.value)}
-              placeholder="100"
+              placeholder="0.005"
             />
           </div>
           <div>
