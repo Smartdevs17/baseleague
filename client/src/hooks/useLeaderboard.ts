@@ -9,10 +9,10 @@ export interface LeaderboardEntry {
 	wins: number
 	losses: number
 	totalMatches: number
-	earnings: string // In CELO
+	earnings: string // In ETH
 	winRate: number
 	totalBets: number
-	totalWagered: string // In CELO
+	totalWagered: string // In ETH
 }
 
 interface BetData {
