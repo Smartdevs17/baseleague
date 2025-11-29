@@ -2,7 +2,7 @@
 export const config = {
   // Application settings
   app: {
-    name: import.meta.env.VITE_APP_NAME || 'SoccerLeague',
+    name: import.meta.env.VITE_APP_NAME || 'BaseLeague',
     version: import.meta.env.VITE_APP_VERSION || '1.0.0',
     debug: import.meta.env.VITE_DEBUG === 'true',
     logLevel: import.meta.env.VITE_LOG_LEVEL || 'info',
@@ -26,7 +26,7 @@ export const config = {
 
   // API configuration
   api: {
-    baseUrl: import.meta.env.VITE_API_BASE_URL || 'https://soccerleague.vercel.app',
+    baseUrl: import.meta.env.VITE_API_BASE_URL || 'https://baseleague.vercel.app',
     football: {
       key: import.meta.env.VITE_API_FOOTBALL_KEY || 'demo-key',
       baseUrl: import.meta.env.VITE_API_FOOTBALL_BASE_URL || 'https://v3.football.api-sports.io',
@@ -87,7 +87,7 @@ export const validateConfig = () => {
 
 // Log configuration in development
 if (config.app.debug) {
-  console.log('SoccerLeague Configuration:', {
+  console.log('BaseLeague Configuration:', {
     app: config.app,
     wallet: { ...config.wallet, projectId: config.wallet.projectId ? '***' : undefined },
     contracts: config.contracts,

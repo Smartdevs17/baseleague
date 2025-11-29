@@ -62,7 +62,7 @@ const NotFound = () => {
               <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
                 <Trophy className="w-5 h-5 text-primary-foreground" />
               </div>
-              <span className="text-2xl font-bold text-foreground">SoccerLeague</span>
+              <span className="text-2xl font-bold text-foreground">BaseLeague</span>
             </div>
             <Button
               variant="ghost"
@@ -192,7 +192,7 @@ const NotFound = () => {
       <footer className="border-t border-border bg-background mt-16">
         <div className="container mx-auto px-4 py-8">
           <div className="text-center text-muted-foreground">
-            <p>&copy; 2024 SoccerLeague. The future of decentralized sports betting.</p>
+            <p>&copy; 2024 BaseLeague. The future of decentralized sports betting.</p>
           </div>
         </div>
       </footer>

@@ -75,7 +75,7 @@ const Landing = () => {
     {
       name: "Alex Chen",
       role: "Football Enthusiast",
-      content: "SoccerLeague revolutionized how I bet on football. The head-to-head format is incredibly engaging!",
+      content: "BaseLeague revolutionized how I bet on football. The head-to-head format is incredibly engaging!",
       rating: 5
     },
     {
@@ -102,7 +102,7 @@ const Landing = () => {
               <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
                 <Trophy className="w-5 h-5 text-primary-foreground" />
               </div>
-              <span className="text-2xl font-bold text-foreground">SoccerLeague</span>
+              <span className="text-2xl font-bold text-foreground">BaseLeague</span>
             </div>
             <div className="flex items-center space-x-4">
               <Button
@@ -267,7 +267,7 @@ const Landing = () => {
         <div className="container mx-auto px-4">
           <div className="text-center space-y-4 mb-16">
             <h2 className="text-3xl lg:text-4xl font-bold text-foreground">
-              Why Choose SoccerLeague?
+              Why Choose BaseLeague?
             </h2>
             <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
               Experience the next generation of sports betting with cutting-edge Web3 technology
@@ -415,7 +415,7 @@ const Landing = () => {
                 <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
                   <Trophy className="w-5 h-5 text-primary-foreground" />
                 </div>
-                <span className="text-xl font-bold">SoccerLeague</span>
+                <span className="text-xl font-bold">BaseLeague</span>
               </div>
               <p className="text-muted-foreground">
                 The future of decentralized sports betting
@@ -486,7 +486,7 @@ const Landing = () => {
           </div>
 
           <div className="border-t border-border mt-12 pt-8 text-center text-muted-foreground">
-            <p>&copy; 2024 SoccerLeague. All rights reserved.</p>
+            <p>&copy; 2024 BaseLeague. All rights reserved.</p>
           </div>
         </div>
       </footer>

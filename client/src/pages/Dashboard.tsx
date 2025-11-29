@@ -270,7 +270,7 @@ const Dashboard = () => {
         <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-primary via-accent to-primary p-8 mb-8 shadow-glow">
           <div className="relative z-10">
             <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
-              Welcome to SoccerLeague
+              Welcome to BaseLeague
             </h1>
             <p className="text-lg text-white/90 mb-6 max-w-2xl">
               Compete head-to-head in fantasy football matches. Stake your ETH, predict match outcomes, and win big!

@@ -18,7 +18,7 @@ const Navbar = () => {
               <Trophy className="w-6 h-6 text-primary-foreground" />
             </div>
             <span className="text-xl font-bold bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent">
-              SoccerLeague
+              BaseLeague
             </span>
           </Link>
 

@@ -114,7 +114,7 @@ const Leaderboard = () => {
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-2">Leaderboard</h1>
           <p className="text-muted-foreground">
-            Top performers on SoccerLeague
+            Top performers on BaseLeague
           </p>
         </div>
 
