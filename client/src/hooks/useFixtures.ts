@@ -18,7 +18,11 @@ export const useFixtures = () => {
 			setError(null)
 
 			try {
-				const apiUrl = `${config.api.baseUrl}/api/fixtures`
+				// Use localhost in development, production URL otherwise
+				const apiBaseUrl = import.meta.env.DEV 
+					? (import.meta.env.VITE_API_BASE_URL || 'http://localhost:3002')
+					: config.api.baseUrl
+				const apiUrl = `${apiBaseUrl}/api/fixtures`
 				console.log('📡 Fetching fixtures from:', apiUrl)
 
 				const response = await fetch(apiUrl, {
@@ -35,7 +39,12 @@ export const useFixtures = () => {
 				const data = await response.json()
 
 				if (data.success && Array.isArray(data.fixtures)) {
-					console.log(`✅ Fetched ${data.fixtures.length} fixtures with actual match times`)
+					// Log sample fixture to verify kickoffTime is present
+					if (data.fixtures.length > 0) {
+						const sample = data.fixtures[0]
+						console.log(`✅ Fetched ${data.fixtures.length} fixtures with actual match times`)
+						console.log('📅 Sample fixture kickoffTime:', sample.kickoffTime, '| Type:', typeof sample.kickoffTime)
+					}
 					setFixtures(data.fixtures as ApiFixture[])
 				} else {
 					throw new Error('Invalid response format from API')
@@ -64,7 +73,10 @@ export const useFixtures = () => {
 		refetch: async () => {
 			setLoading(true)
 			try {
-				const apiUrl = `${config.api.baseUrl}/api/fixtures`
+				const apiBaseUrl = import.meta.env.DEV 
+					? (import.meta.env.VITE_API_BASE_URL || 'http://localhost:3002')
+					: config.api.baseUrl
+				const apiUrl = `${apiBaseUrl}/api/fixtures`
 				const response = await fetch(apiUrl)
 				const data = await response.json()
 				if (data.success && Array.isArray(data.fixtures)) {
@@ -93,7 +105,11 @@ export const useUpcomingFixtures = () => {
 			setError(null)
 
 			try {
-				const apiUrl = `${config.api.baseUrl}/api/fixtures/upcoming`
+				// Use localhost in development, production URL otherwise
+				const apiBaseUrl = import.meta.env.DEV 
+					? (import.meta.env.VITE_API_BASE_URL || 'http://localhost:3002')
+					: config.api.baseUrl
+				const apiUrl = `${apiBaseUrl}/api/fixtures/upcoming`
 				console.log('📡 Fetching upcoming fixtures from:', apiUrl)
 
 				const response = await fetch(apiUrl, {
@@ -110,7 +126,12 @@ export const useUpcomingFixtures = () => {
 				const data = await response.json()
 
 				if (data.success && Array.isArray(data.fixtures)) {
-					console.log(`✅ Fetched ${data.fixtures.length} upcoming fixtures with actual match times`)
+					// Log sample fixture to verify kickoffTime is present
+					if (data.fixtures.length > 0) {
+						const sample = data.fixtures[0]
+						console.log(`✅ Fetched ${data.fixtures.length} upcoming fixtures with actual match times`)
+						console.log('📅 Sample fixture kickoffTime:', sample.kickoffTime, '| Type:', typeof sample.kickoffTime)
+					}
 					setFixtures(data.fixtures as ApiFixture[])
 				} else {
 					throw new Error('Invalid response format from API')
@@ -138,7 +159,10 @@ export const useUpcomingFixtures = () => {
 		refetch: async () => {
 			setLoading(true)
 			try {
-				const apiUrl = `${config.api.baseUrl}/api/fixtures/upcoming`
+				const apiBaseUrl = import.meta.env.DEV 
+					? (import.meta.env.VITE_API_BASE_URL || 'http://localhost:3002')
+					: config.api.baseUrl
+				const apiUrl = `${apiBaseUrl}/api/fixtures/upcoming`
 				const response = await fetch(apiUrl)
 				const data = await response.json()
 				if (data.success && Array.isArray(data.fixtures)) {
