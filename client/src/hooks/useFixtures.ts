@@ -133,11 +133,20 @@ export const useUpcomingFixtures = () => {
 				const data = await response.json()
 
 				if (data.success && Array.isArray(data.fixtures)) {
-					// Log sample fixture to verify kickoffTime is present
+					// Log sample fixture to verify data
 					if (data.fixtures.length > 0) {
 						const sample = data.fixtures[0]
 						console.log(`✅ Fetched ${data.fixtures.length} upcoming fixtures with actual match times`)
-						console.log('📅 Sample fixture kickoffTime:', sample.kickoffTime, '| Type:', typeof sample.kickoffTime)
+						console.log('📅 Sample fixture:', {
+							id: sample.id,
+							homeTeam: sample.homeTeam,
+							awayTeam: sample.awayTeam,
+							homeTeamId: sample.homeTeamId,
+							awayTeamId: sample.awayTeamId,
+							league: sample.league,
+							country: sample.country,
+							kickoffTime: sample.kickoffTime,
+						})
 					}
 					setFixtures(data.fixtures as ApiFixture[])
 				} else {

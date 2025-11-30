@@ -406,6 +406,19 @@ const CreateMatch = () => {
             {filteredFixtures.map((fixture) => {
               const { date, time } = formatDate(fixture.kickoffTime);
               
+              // Debug: Log first fixture to verify team names
+              if (filteredFixtures.indexOf(fixture) === 0) {
+                console.log('🔍 [CreateMatch] First fixture data:', {
+                  id: fixture.id,
+                  homeTeam: fixture.homeTeam,
+                  awayTeam: fixture.awayTeam,
+                  homeTeamId: fixture.homeTeamId,
+                  awayTeamId: fixture.awayTeamId,
+                  league: fixture.league,
+                  country: fixture.country,
+                })
+              }
+              
               return (
                 <Card
                   key={fixture.id}
