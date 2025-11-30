@@ -75,10 +75,23 @@ function transformFixture(fplFixture, currentGameweek, teams) {
 	}
 
 	// Get team names from teams mapping
-	const homeTeamId = fplFixture.team_h?.toString() || ''
-	const awayTeamId = fplFixture.team_a?.toString() || ''
-	const homeTeam = teams[parseInt(homeTeamId)]?.name || fplFixture.team_h_name || `Team ${homeTeamId}`
-	const awayTeam = teams[parseInt(awayTeamId)]?.name || fplFixture.team_a_name || `Team ${awayTeamId}`
+	// team_h and team_a are numbers in FPL API
+	const homeTeamIdNum = fplFixture.team_h
+	const awayTeamIdNum = fplFixture.team_a
+	const homeTeamId = homeTeamIdNum?.toString() || ''
+	const awayTeamId = awayTeamIdNum?.toString() || ''
+	
+	// Look up team names from teams cache
+	const homeTeam = teams[homeTeamIdNum]?.name || fplFixture.team_h_name || `Team ${homeTeamId}`
+	const awayTeam = teams[awayTeamIdNum]?.name || fplFixture.team_a_name || `Team ${awayTeamId}`
+	
+	// Debug log if team name not found
+	if (!teams[homeTeamIdNum]?.name && homeTeamIdNum) {
+		console.warn(`⚠️ Team name not found for home team ID: ${homeTeamIdNum}`)
+	}
+	if (!teams[awayTeamIdNum]?.name && awayTeamIdNum) {
+		console.warn(`⚠️ Team name not found for away team ID: ${awayTeamIdNum}`)
+	}
 
 	return {
 		id: fplFixture.id.toString(),
