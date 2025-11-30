@@ -4,10 +4,11 @@ import { fixturesState, fixturesLoadingState, fixturesErrorState, ApiFixture } f
 
 // Use Vercel serverless function to proxy FPL API (handles CORS)
 const getApiBaseUrl = () => {
-	// In development, use localhost API routes (if running Vercel dev)
+	// In development, use Vite proxy (configured in vite.config.ts)
 	// In production, use the deployed Vercel function
 	if (import.meta.env.DEV) {
-		return import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000'
+		// Use relative path - Vite proxy will handle it
+		return ''
 	}
 	return import.meta.env.VITE_API_BASE_URL || window.location.origin
 }
