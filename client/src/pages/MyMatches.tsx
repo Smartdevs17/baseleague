@@ -50,19 +50,19 @@ const MyMatches = () => {
 
     // Calculate total earnings (simplified - would need to track actual payouts)
     // For now, estimate based on wins and stake amounts
-    const totalEarnings = completed.reduce((sum, match) => {
+    const totalEarningsWei = completed.reduce((sum, match) => {
       if (match.winner?.toLowerCase() === address?.toLowerCase()) {
         // Winner gets 2x stake (simplified calculation)
-        return sum + parseFloat(formatEther(BigInt(match.stake))) * 2;
+        return sum + (BigInt(match.stake) * 2n);
       }
       return sum;
-    }, 0);
+    }, 0n);
 
     return {
       totalMatches: userMatches.length,
       wins,
       active: active.length,
-      totalEarnings: totalEarnings.toFixed(3),
+      totalEarnings: formatEthDisplay(totalEarningsWei),
     };
   }, [userMatches, address]);
 
