@@ -1,6 +1,7 @@
 import { useAccount, useReadContract, usePublicClient } from 'wagmi'
 import { useState, useEffect, useMemo } from 'react'
 import { formatEther } from 'viem'
+import { formatEthDisplay } from '@/utils/formatEth'
 import { CONTRACTS, ABIS } from '@/lib/contracts'
 
 export interface LeaderboardEntry {
@@ -133,9 +134,9 @@ export const useLeaderboard = () => {
 							losses: stats.losses,
 							totalMatches,
 							totalBets: stats.totalBets,
-							earnings: formatEther(stats.totalEarnings),
+							earnings: formatEthDisplay(stats.totalEarnings),
 							winRate,
-							totalWagered: formatEther(stats.totalWagered),
+							totalWagered: formatEthDisplay(stats.totalWagered),
 						} as Omit<LeaderboardEntry, 'rank'>
 					})
 					.filter((entry) => entry.totalMatches > 0) // Only show players with settled matches

@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Trophy, Users, Clock, CheckCircle2 } from 'lucide-react';
 import { formatEther } from 'viem';
+import { formatEthDisplay } from '@/utils/formatEth';
 
 interface MatchCardProps {
   match: Match;
@@ -54,7 +55,7 @@ const MatchCard = ({ match, onJoin, onView, showActions = true, currentUserAddre
           </div>
           <div className="text-right">
             <div className="text-2xl font-bold text-primary">
-              {formatEther(BigInt(match.stake) * 2n)} ETH
+              {formatEthDisplay(BigInt(match.stake) * 2n)}
             </div>
             <div className="text-xs text-muted-foreground">Prize Pool</div>
           </div>

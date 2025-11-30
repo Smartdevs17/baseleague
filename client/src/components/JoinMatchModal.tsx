@@ -7,6 +7,7 @@ import { Match, PredictionType } from '@/types/match';
 import { Loader2, AlertCircle, Wallet } from 'lucide-react';
 import { useEthBalance } from '@/hooks/useContracts';
 import { formatEther } from 'viem';
+import { formatEthDisplay } from '@/utils/formatEth';
 import { useAccount } from 'wagmi';
 import { toast } from 'sonner';
 
@@ -209,7 +210,7 @@ const JoinMatchModal = ({ open, onOpenChange, match, onConfirm }: JoinMatchModal
           {/* Prize Info */}
           <div className="p-3 bg-success/10 border border-success/30 rounded-lg">
             <div className="text-sm font-medium text-success text-center">
-              Win {parseFloat(formatEther(BigInt(match.stake) * 2n)).toFixed(3)} ETH
+              Win {formatEthDisplay(BigInt(match.stake) * 2n)}
             </div>
           </div>
 

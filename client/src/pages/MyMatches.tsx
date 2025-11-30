@@ -8,6 +8,7 @@ import { Match } from '@/types/match';
 import { useAccount } from 'wagmi';
 import { useContractMatches } from '@/hooks/useContractMatches';
 import { formatEther } from 'viem';
+import { formatEthDisplay } from '@/utils/formatEth';
 
 const MyMatches = () => {
   const { address, isConnected } = useAccount();
