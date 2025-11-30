@@ -85,8 +85,8 @@ cd baseleague
 cd contracts
 npm install
 
-# Install API server dependencies
-cd ../api-server
+# Install backend API server dependencies
+cd ../backend
 npm install
 
 # Install client dependencies
@@ -145,12 +145,12 @@ Update `.env` files with the deployed addresses.
 
 See `contracts/CHAINLINK_SETUP.md` for detailed setup instructions.
 
-#### Start API Server (for fixtures)
+#### Start Backend API Server (for fixtures)
 
-The API server proxies FPL API requests and handles CORS:
+The backend API server proxies FPL API requests and handles CORS:
 
 ```bash
-cd api-server
+cd backend
 npm start
 ```
 
@@ -158,7 +158,10 @@ The server will run on `http://localhost:3002` and provide:
 - `GET /api/fixtures` - All fixtures
 - `GET /api/fixtures-upcoming` - Upcoming fixtures only
 
-**Note:** The client is configured to use `http://localhost:3002` in development mode.
+**Note:** 
+- The client is configured to use `http://localhost:3002` in development mode
+- The backend automatically deploys to Vercel as serverless functions when pushed to main branch
+- In production, it will be available at `https://baseleague.vercel.app/api/*`
 
 ## 📁 Project Structure
 
@@ -168,8 +171,9 @@ baseleague/
 │   ├── contracts/      # Solidity contracts
 │   ├── scripts/        # Deployment scripts
 │   └── test/           # Contract tests
-├── api-server/         # Simple API server for FPL API proxy
-│   └── server.js       # Express server with CORS
+├── backend/            # API server for FPL API proxy
+│   ├── server.js      # Express server with CORS (deploys to Vercel)
+│   └── vercel.json    # Vercel deployment config
 └── client/             # Frontend application
 ```
 
