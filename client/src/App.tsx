@@ -5,6 +5,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { WagmiProvider } from 'wagmi';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { RainbowKitProvider } from '@rainbow-me/rainbowkit';
+import { RecoilRoot } from 'recoil';
 import { wagmiConfig } from './lib/wagmi';
 import '@rainbow-me/rainbowkit/styles.css';
 import Landing from "./pages/Landing";
@@ -21,30 +22,32 @@ import NotFound from "./pages/NotFound";
 const queryClient = new QueryClient();
 
 const App = () => (
-	<WagmiProvider config={wagmiConfig}>
-		<QueryClientProvider client={queryClient}>
-			<RainbowKitProvider>
-				<TooltipProvider>
-					<Toaster />
-					<Sonner />
-					<BrowserRouter>
-						<Routes>
-							<Route path="/" element={<Landing />} />
-							<Route path="/app" element={<Dashboard />} />
-							<Route path="/create" element={<CreateMatch />} />
-							<Route path="/my-matches" element={<MyMatches />} />
-							<Route path="/leaderboard" element={<Leaderboard />} />
-							<Route path="/terms" element={<Terms />} />
-							<Route path="/privacy" element={<Privacy />} />
-							<Route path="/disclaimer" element={<Disclaimer />} />
-							{/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-							<Route path="*" element={<NotFound />} />
-						</Routes>
-					</BrowserRouter>
-				</TooltipProvider>
-			</RainbowKitProvider>
-		</QueryClientProvider>
-	</WagmiProvider>
+	<RecoilRoot>
+		<WagmiProvider config={wagmiConfig}>
+			<QueryClientProvider client={queryClient}>
+				<RainbowKitProvider>
+					<TooltipProvider>
+						<Toaster />
+						<Sonner />
+						<BrowserRouter>
+							<Routes>
+								<Route path="/" element={<Landing />} />
+								<Route path="/app" element={<Dashboard />} />
+								<Route path="/create" element={<CreateMatch />} />
+								<Route path="/my-matches" element={<MyMatches />} />
+								<Route path="/leaderboard" element={<Leaderboard />} />
+								<Route path="/terms" element={<Terms />} />
+								<Route path="/privacy" element={<Privacy />} />
+								<Route path="/disclaimer" element={<Disclaimer />} />
+								{/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+								<Route path="*" element={<NotFound />} />
+							</Routes>
+						</BrowserRouter>
+					</TooltipProvider>
+				</RainbowKitProvider>
+			</QueryClientProvider>
+		</WagmiProvider>
+	</RecoilRoot>
 );
 
 export default App;
