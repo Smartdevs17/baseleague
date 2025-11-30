@@ -111,22 +111,31 @@ npm run deploy:base-sepolia
 ```
 
 This will deploy:
-- CustomResultsOracle
+- ResultsConsumer (Chainlink Functions consumer)
 - PredictionContract
 
 Update `.env` files with the deployed addresses.
 
-#### Start Backend Oracle Service
+#### Setup Chainlink Functions
 
-```bash
-cd backend
-npm start
-```
+1. **Create Chainlink Functions Subscription:**
+   - Visit [Chainlink Functions App](https://functions.chain.link/)
+   - Connect your wallet (Base Sepolia network)
+   - Create a new subscription
+   - Fund it with LINK tokens (at least 2-5 LINK for testing)
 
-The service will:
-- Connect to MongoDB
-- Poll FPL API every 5 minutes
-- Submit finished matches to the contract
+2. **Authorize ResultsConsumer Contract:**
+   - In the Functions App, add your deployed `ResultsConsumer` contract address as a consumer
+   - This allows the contract to make requests
+
+3. **Set Subscription ID:**
+   ```bash
+   cd contracts
+   npm run set-subscription
+   ```
+   Enter your subscription ID when prompted.
+
+See `contracts/CHAINLINK_SETUP.md` for detailed setup instructions.
 
 ## 📁 Project Structure
 
@@ -136,19 +145,13 @@ baseleague/
 │   ├── contracts/      # Solidity contracts
 │   ├── scripts/        # Deployment scripts
 │   └── test/           # Contract tests
-├── backend/            # Oracle service
-│   ├── src/
-│   │   ├── services/   # FPL API, contract, oracle services
-│   │   ├── models/     # MongoDB models
-│   │   └── scripts/    # Test scripts
-│   └── abis/           # Contract ABIs
 └── client/             # Frontend application
 ```
 
 ## 🔗 Deployed Contracts (Base Sepolia)
 
-- **CustomResultsOracle**: `0x816B6a402cC26F0D5B3b28794061C75BC673490f`
-- **PredictionContract**: `0xfBa3E093ad88Ad56abd90956Bc383898bb85e0b2`
+- **ResultsConsumer**: `0xaF404EA0C622c1bcd7ddca1DC866Ad2eAe248592`
+- **PredictionContract**: `0xF6Ee0a3a8Ea1fE73D0DFfac8419bF676276D56cB`
 - **Network**: Base Sepolia (Chain ID: 84532)
 - **Explorer**: [Base Sepolia Explorer](https://sepolia.basescan.org)
 
@@ -160,12 +163,9 @@ baseleague/
 - OpenZeppelin Contracts
 - ethers.js
 
-### Backend
-- Node.js
-- MongoDB + Mongoose
-- ethers.js
-- node-cron
-- axios
+### Oracle
+- Chainlink Functions
+- ResultsConsumer contract
 
 
 ## 📝 Key Features
@@ -178,7 +178,7 @@ baseleague/
 - Never commit `.env` files (already in `.gitignore`)
 - Keep private keys secure
 - Use different keys for different environments
-- Oracle wallet must be authorized in CustomResultsOracle contract
+- ResultsConsumer contract must be authorized in Chainlink Functions subscription
 
 ## 📚 Documentation
 
