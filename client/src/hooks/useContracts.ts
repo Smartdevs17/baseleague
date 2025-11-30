@@ -132,86 +132,107 @@ export const useResultsConsumer = () => {
 			console.log('  Current hash state:', hashRef.current)
 			console.log('  isPending:', isPending)
 			
-			// In Wagmi v2, writeContract should return a promise that resolves to the hash
-			// But it only resolves after user confirms in MetaMask
-			const txHashPromise = writeContract({
-				address: CONTRACTS.PREDICTION_CONTRACT,
-				abi: ABIS.PREDICTION_CONTRACT,
-				functionName: 'placeBet',
-				args: [BigInt(gameweek), BigInt(matchId), BigInt(prediction)],
-				value: amountWei, // Send ETH with the transaction
-			})
-			
-			console.log('🔍 [placeBet] writeContract called with value:', {
+			// In Wagmi v2, writeContract triggers the transaction and hash appears in hook state
+			// Call writeContract (this opens MetaMask)
+			console.log('🔍 [placeBet] Calling writeContract, waiting for user confirmation in MetaMask...')
+			console.log('🔍 [placeBet] writeContract params:', {
 				value: amountWei.toString(),
 				valueHex: `0x${amountWei.toString(16)}`,
+				gameweek,
+				matchId,
+				prediction,
 			})
 			
-			console.log('🔍 [placeBet] writeContract called, waiting for user confirmation...')
-			
-			// Wait for the promise to resolve (user confirms in MetaMask)
-			// This should return the hash
-			// The promise will reject if user rejects, but we need to distinguish that from other errors
-			let txHash: `0x${string}` | undefined
+			// Call writeContract - this will open MetaMask
+			// The promise might resolve immediately, hash appears in hook state
+			let writeContractPromise: Promise<`0x${string}` | undefined>
 			try {
-				txHash = await txHashPromise
-				console.log('✅ [placeBet] writeContract promise resolved with hash:', txHash)
-			} catch (promiseError: any) {
-				console.error('❌ [placeBet] writeContract promise rejected:', promiseError)
-				
-				// Check if this is a user rejection (not a real error)
-				const errorMessage = promiseError?.message || String(promiseError) || ''
-				const errorCode = promiseError?.code || promiseError?.error?.code || ''
-				
-				// User rejection codes and messages
-				const isUserRejection = 
-					errorCode === 4001 || // User rejected request
-					errorCode === 'ACTION_REJECTED' ||
-					errorMessage.toLowerCase().includes('user rejected') ||
-					errorMessage.toLowerCase().includes('user denied') ||
-					errorMessage.toLowerCase().includes('rejected') ||
-					errorMessage.toLowerCase().includes('denied') ||
-					errorMessage.toLowerCase().includes('cancelled') ||
-					errorMessage.toLowerCase().includes('canceled')
-				
-				if (isUserRejection) {
-					// User rejected - this is not an error, just a cancellation
+				writeContractPromise = writeContract({
+					address: CONTRACTS.PREDICTION_CONTRACT,
+					abi: ABIS.PREDICTION_CONTRACT,
+					functionName: 'placeBet',
+					args: [BigInt(gameweek), BigInt(matchId), BigInt(prediction)],
+					value: amountWei, // Send ETH with the transaction
+				}) as Promise<`0x${string}` | undefined>
+			} catch (callError: any) {
+				// Immediate error (before MetaMask opens)
+				const errorMessage = callError?.message || String(callError) || ''
+				if (errorMessage.toLowerCase().includes('user rejected') || 
+				    errorMessage.toLowerCase().includes('rejected')) {
 					throw new Error('USER_REJECTED')
 				}
-				
-				// Real error - re-throw
-				throw promiseError
+				throw callError
 			}
 			
-			// If we got a hash from the promise, return it
-			if (txHash) {
-				return txHash
-			}
-			
-			// Fallback: check hook state (in case promise doesn't return hash)
-			// Wait longer for hash to appear in hook state (user might be signing)
-			console.log('⚠️ [placeBet] No hash from promise, checking hook state...')
-			const maxWait = 60000 // 60 seconds - give user time to sign in MetaMask
-			const interval = 500 // Check every 500ms
+			// Wait for either:
+			// 1. Promise to resolve (might return hash or undefined)
+			// 2. Hash to appear in hook state
+			// 3. User rejection error
+			const maxWait = 60000 // 60 seconds - give user time to sign
+			const interval = 300 // Check every 300ms
 			let elapsed = 0
+			let promiseResolved = false
+			let promiseResult: `0x${string}` | undefined = undefined
+			let promiseError: any = null
 			
+			// Start waiting for promise (in case it resolves)
+			writeContractPromise
+				.then((result) => {
+					promiseResolved = true
+					promiseResult = result
+					console.log('✅ [placeBet] writeContract promise resolved:', result)
+				})
+				.catch((err) => {
+					promiseResolved = true
+					promiseError = err
+					console.log('❌ [placeBet] writeContract promise rejected:', err)
+				})
+			
+			// Wait for hash to appear (either from promise or hook state)
 			while (elapsed < maxWait) {
 				await new Promise(resolve => setTimeout(resolve, interval))
 				elapsed += interval
 				
-				// Check latest hash from ref
+				// Check if promise resolved with hash
+				if (promiseResolved && promiseResult) {
+					console.log('✅ [placeBet] Hash from promise:', promiseResult)
+					return promiseResult
+				}
+				
+				// Check if promise rejected (user rejection)
+				if (promiseResolved && promiseError) {
+					const errorMessage = promiseError?.message || String(promiseError) || ''
+					const errorCode = promiseError?.code || promiseError?.error?.code || ''
+					
+					const isUserRejection = 
+						errorCode === 4001 ||
+						errorCode === 'ACTION_REJECTED' ||
+						errorMessage.toLowerCase().includes('user rejected') ||
+						errorMessage.toLowerCase().includes('user denied') ||
+						errorMessage.toLowerCase().includes('rejected') ||
+						errorMessage.toLowerCase().includes('denied') ||
+						errorMessage.toLowerCase().includes('cancelled') ||
+						errorMessage.toLowerCase().includes('canceled')
+					
+					if (isUserRejection) {
+						throw new Error('USER_REJECTED')
+					}
+					
+					// Real error from promise
+					throw promiseError
+				}
+				
+				// Check hook state for hash
 				if (hashRef.current) {
 					console.log('✅ [placeBet] Hash found in hook state:', hashRef.current)
 					return hashRef.current
 				}
 				
-				// Check if there's an error (but only if it's not a pending state)
-				// Use refs to get latest values
+				// Check for errors in hook state (but only if not pending)
 				const currentError = errorRef.current
 				const currentIsPending = isPendingRef.current
 				
 				if (currentError && !currentIsPending) {
-					// Check if error is user rejection
 					const errorMessage = currentError?.message || String(currentError) || ''
 					const isUserRejection = 
 						errorMessage.toLowerCase().includes('user rejected') ||
@@ -229,8 +250,14 @@ export const useResultsConsumer = () => {
 				
 				// Log progress every 5 seconds
 				if (elapsed % 5000 === 0 && elapsed > 0) {
-					console.log(`⏳ [placeBet] Still waiting for hash... (${elapsed/1000}s elapsed, isPending: ${currentIsPending})`)
+					console.log(`⏳ [placeBet] Waiting for hash... (${elapsed/1000}s elapsed, isPending: ${currentIsPending}, promiseResolved: ${promiseResolved})`)
 				}
+			}
+			
+			// Timeout - check one more time
+			if (hashRef.current) {
+				console.log('✅ [placeBet] Hash found after timeout check:', hashRef.current)
+				return hashRef.current
 			}
 			
 			// If we get here, hash never appeared
