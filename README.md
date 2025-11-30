@@ -147,7 +147,7 @@ See `contracts/CHAINLINK_SETUP.md` for detailed setup instructions.
 
 #### Start Backend API Server (for fixtures)
 
-The backend API server proxies FPL API requests and handles CORS:
+The backend API server proxies football API requests and handles CORS:
 
 ```bash
 cd backend
@@ -157,6 +157,23 @@ npm start
 The server will run on `http://localhost:3002` and provide:
 - `GET /api/fixtures` - All fixtures
 - `GET /api/fixtures-upcoming` - Upcoming fixtures only
+
+**API Configuration:**
+
+By default, the backend uses **FPL API** (Premier League only). To support multiple leagues and countries:
+
+1. Get a free API key from [Football Data API](https://www.football-data.org/)
+2. Create `backend/.env` file:
+   ```env
+   FOOTBALL_DATA_API_KEY=your_api_key_here
+   ```
+3. Restart the backend server
+
+The backend will automatically:
+- Use Football Data API if key is provided (supports multiple leagues/countries)
+- Fall back to FPL API if no key (Premier League only)
+- Filter fixtures by league and country
+- Provide correct team names, leagues, and countries
 
 **Note:** 
 - The client is configured to use `http://localhost:3002` in development mode
