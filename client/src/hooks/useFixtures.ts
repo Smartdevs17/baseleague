@@ -15,43 +15,11 @@ const getApiBaseUrl = () => {
 	return import.meta.env.VITE_API_BASE_URL || window.location.origin
 }
 
-// Fallback: Direct FPL API via CORS proxy (for development only)
-const FPL_API_BASE_URL = 'https://fantasy.premierleague.com/api'
-const CORS_PROXY = 'https://api.allorigins.win/raw?url='
-
-// Helper to fetch with fallback
-const fetchWithFallback = async (endpoint: string) => {
-	const apiBaseUrl = getApiBaseUrl()
-	const apiUrl = apiBaseUrl ? `${apiBaseUrl}${endpoint}` : endpoint
-	
-	try {
-		const response = await fetch(apiUrl, {
-			method: 'GET',
-			headers: {
-				'Content-Type': 'application/json',
-			},
-		})
-		
-		if (response.ok) {
-			return await response.json()
-		}
-		throw new Error(`HTTP ${response.status}`)
-	} catch (error) {
-		// Fallback to CORS proxy in development
-		if (import.meta.env.DEV) {
-			console.warn('API request failed, using CORS proxy fallback:', error)
-			const proxyUrl = `${CORS_PROXY}${encodeURIComponent(`${FPL_API_BASE_URL}${endpoint.replace('/api/', '/')}`)}`
-			const proxyResponse = await fetch(proxyUrl)
-			return await proxyResponse.json()
-		}
-		throw error
-	}
-}
 
 /**
- * Hook to fetch fixtures via Vercel serverless function proxy
+ * Hook to fetch fixtures via API server proxy
  * Returns fixtures with actual match times from FPL API
- * Uses serverless function to handle CORS issues
+ * Uses simple backend server to handle CORS issues
  */
 export const useFixtures = () => {
 	const [fixtures, setFixtures] = useRecoilState(fixturesState)
@@ -65,66 +33,21 @@ export const useFixtures = () => {
 
 			try {
 				const apiBaseUrl = getApiBaseUrl()
-				const apiUrl = apiBaseUrl ? `${apiBaseUrl}/api/fixtures` : '/api/fixtures'
-				console.log('📡 Fetching fixtures via proxy:', apiUrl)
+				const apiUrl = `${apiBaseUrl}/api/fixtures`
+				console.log('📡 Fetching fixtures from API server:', apiUrl)
 
-				let data
-				try {
-					const response = await fetch(apiUrl, {
-						method: 'GET',
-						headers: {
-							'Content-Type': 'application/json',
-						},
-					})
+				const response = await fetch(apiUrl, {
+					method: 'GET',
+					headers: {
+						'Content-Type': 'application/json',
+					},
+				})
 
-					if (!response.ok) {
-						throw new Error(`HTTP error! status: ${response.status}`)
-					}
-
-					data = await response.json()
-				} catch (fetchError) {
-					// Fallback: Use CORS proxy in development
-					if (import.meta.env.DEV) {
-						console.warn('Direct fetch failed, using CORS proxy fallback')
-						const proxyUrl = `${CORS_PROXY}${encodeURIComponent(`${FPL_API_BASE_URL}/fixtures/`)}`
-						const fplData = await fetch(proxyUrl).then(r => r.json())
-						
-						// Transform FPL data to our format
-						let currentGameweek = 1
-						try {
-							const bootstrapUrl = `${CORS_PROXY}${encodeURIComponent(`${FPL_API_BASE_URL}/bootstrap-static/`)}`
-							const bootstrap = await fetch(bootstrapUrl).then(r => r.json())
-							const currentEvent = bootstrap.events?.find((e: any) => e.is_current)
-							if (currentEvent) currentGameweek = currentEvent.id
-						} catch (e) {
-							console.warn('Could not fetch gameweek:', e)
-						}
-
-						const fixtures = Array.isArray(fplData) ? fplData.map((f: any) => ({
-							id: f.id.toString(),
-							externalId: f.id.toString(),
-							homeTeam: f.team_h_name || `Team ${f.team_h}`,
-							awayTeam: f.team_a_name || `Team ${f.team_a}`,
-							homeTeamId: f.team_h?.toString() || '',
-							awayTeamId: f.team_a?.toString() || '',
-							kickoffTime: f.kickoff_time || new Date().toISOString(),
-							status: f.finished ? 'finished' : f.started ? 'live' : 'pending',
-							homeScore: f.team_h_score,
-							awayScore: f.team_a_score,
-							gameweek: f.event || currentGameweek,
-							pools: { win: { total: 0, betCount: 0 }, draw: { total: 0, betCount: 0 }, lose: { total: 0, betCount: 0 } },
-							winningOutcome: null,
-							isPayoutProcessed: false,
-							totalPoolSize: 0,
-							createdAt: new Date().toISOString(),
-							updatedAt: new Date().toISOString(),
-						})) : []
-
-						data = { success: true, fixtures }
-					} else {
-						throw fetchError
-					}
+				if (!response.ok) {
+					throw new Error(`HTTP error! status: ${response.status}`)
 				}
+
+				const data = await response.json()
 
 				if (data.success && Array.isArray(data.fixtures)) {
 					// Log sample fixture to verify kickoffTime is present
@@ -177,7 +100,7 @@ export const useFixtures = () => {
 }
 
 /**
- * Hook to fetch only upcoming fixtures via Vercel serverless function proxy
+ * Hook to fetch only upcoming fixtures via API server proxy
  * Filters fixtures to only show those that haven't started yet
  */
 export const useUpcomingFixtures = () => {

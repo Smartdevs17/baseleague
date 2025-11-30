@@ -84,6 +84,14 @@ cd baseleague
 # Install contract dependencies
 cd contracts
 npm install
+
+# Install API server dependencies
+cd ../api-server
+npm install
+
+# Install client dependencies
+cd ../client
+npm install
 ```
 
 ### Configuration
@@ -137,6 +145,21 @@ Update `.env` files with the deployed addresses.
 
 See `contracts/CHAINLINK_SETUP.md` for detailed setup instructions.
 
+#### Start API Server (for fixtures)
+
+The API server proxies FPL API requests and handles CORS:
+
+```bash
+cd api-server
+npm start
+```
+
+The server will run on `http://localhost:3002` and provide:
+- `GET /api/fixtures` - All fixtures
+- `GET /api/fixtures-upcoming` - Upcoming fixtures only
+
+**Note:** The client is configured to use `http://localhost:3002` in development mode.
+
 ## 📁 Project Structure
 
 ```
@@ -145,6 +168,8 @@ baseleague/
 │   ├── contracts/      # Solidity contracts
 │   ├── scripts/        # Deployment scripts
 │   └── test/           # Contract tests
+├── api-server/         # Simple API server for FPL API proxy
+│   └── server.js       # Express server with CORS
 └── client/             # Frontend application
 ```
 
