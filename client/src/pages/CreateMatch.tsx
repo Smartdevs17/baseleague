@@ -445,7 +445,9 @@ const CreateMatch = () => {
                               className="w-8 h-8 object-contain"
                               onError={(e) => {
                                 const target = e.target as HTMLImageElement;
-                                target.src = 'https://via.placeholder.com/32x32/1f2937/ffffff?text=?';
+                                // Use team name initial as fallback
+                                const initial = fixture.homeTeam.substring(0, 1).toUpperCase();
+                                target.src = `data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32"><rect width="32" height="32" fill="%231f2937"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="white" font-size="16" font-weight="bold">${initial}</text></svg>`;
                               }}
                             />
                           </div>
@@ -466,7 +468,9 @@ const CreateMatch = () => {
                               className="w-8 h-8 object-contain"
                               onError={(e) => {
                                 const target = e.target as HTMLImageElement;
-                                target.src = 'https://via.placeholder.com/32x32/1f2937/ffffff?text=?';
+                                // Use team name initial as fallback
+                                const initial = fixture.homeTeam.substring(0, 1).toUpperCase();
+                                target.src = `data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32"><rect width="32" height="32" fill="%231f2937"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="white" font-size="16" font-weight="bold">${initial}</text></svg>`;
                               }}
                             />
                           </div>

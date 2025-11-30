@@ -8,10 +8,19 @@ interface TeamLogoData {
   shortName?: string;
 }
 
-// Premier League official badge base URL
-// Format: https://resources.premierleague.com/premierleague/badges/50/t{teamId}.png
-// Where teamId is the FPL team ID (1-20)
-const PREMIER_LEAGUE_LOGO_BASE = 'https://resources.premierleague.com/premierleague/badges/50';
+// Multiple logo sources with fallback
+// Try different CDN sources for Premier League team logos
+const LOGO_SOURCES = [
+	// Source 1: Premier League official (some teams may return 403)
+	(teamId: string) => `https://resources.premierleague.com/premierleague/badges/50/t${teamId}.png`,
+	// Source 2: Alternative CDN format
+	(teamId: string) => `https://resources.premierleague.com/premierleague/badges/t${teamId}.png`,
+	// Source 3: Using team code from FPL API (if available)
+	(teamId: string) => {
+		const teamCode = FPL_TEAM_CODES[teamId];
+		return teamCode ? `https://resources.premierleague.com/premierleague/badges/50/t${teamCode}.png` : null;
+	},
+];
 
 // Cache for loaded logos to avoid repeated requests
 const logoCache = new Map<string, string>();
@@ -19,7 +28,7 @@ const logoCache = new Map<string, string>();
 class TeamLogoService {
   /**
    * Get team logo URL by FPL team ID (1-20)
-   * Premier League official badges: https://resources.premierleague.com/premierleague/badges/50/t{teamId}.png
+   * Uses multiple fallback sources for reliability
    */
   getLogoById(teamId: string): string {
     // Check cache first
@@ -27,9 +36,8 @@ class TeamLogoService {
       return logoCache.get(teamId)!;
     }
 
-    // Use Premier League official badge URL
-    // FPL team IDs are 1-20 (e.g., 1 = Arsenal, 12 = Liverpool, etc.)
-    const logoUrl = `${PREMIER_LEAGUE_LOGO_BASE}/t${teamId}.png`;
+    // Try first source (most reliable)
+    const logoUrl = LOGO_SOURCES[0](teamId);
     logoCache.set(teamId, logoUrl);
     return logoUrl;
   }
@@ -65,21 +73,38 @@ class TeamLogoService {
 
   /**
    * Preload logos for better performance
+   * Tries multiple sources if first fails
    */
   async preloadLogos(teamIds: string[]): Promise<void> {
     const promises = teamIds.map(async (teamId) => {
-      const logoUrl = this.getLogoById(teamId);
-      try {
-        // Create image element to preload
-        const img = new Image();
-        img.src = logoUrl;
-        await new Promise((resolve, reject) => {
-          img.onload = resolve;
-          img.onerror = reject;
-        });
-      } catch (error) {
-        console.warn(`Failed to preload logo for team ${teamId}:`, error);
+      // Try each logo source until one works
+      for (const getLogoUrl of LOGO_SOURCES) {
+        const logoUrl = getLogoUrl(teamId);
+        if (!logoUrl) continue;
+        
+        try {
+          // Create image element to preload
+          const img = new Image();
+          img.src = logoUrl;
+          await new Promise((resolve, reject) => {
+            img.onload = () => {
+              // Cache the working URL
+              logoCache.set(teamId, logoUrl);
+              resolve(logoUrl);
+            };
+            img.onerror = reject;
+            // Timeout after 5 seconds
+            setTimeout(() => reject(new Error('Timeout')), 5000);
+          });
+          // If successful, break and don't try other sources
+          return;
+        } catch (error) {
+          // Try next source
+          continue;
+        }
       }
+      // If all sources fail, log a warning but don't throw
+      console.warn(`Failed to preload logo for team ${teamId} from all sources`);
     });
 
     await Promise.allSettled(promises);
@@ -92,7 +117,7 @@ class TeamLogoService {
     return Object.entries(FPL_TEAM_IDS).map(([name, id]) => ({
       id: id.toString(),
       name,
-      logo: `${PREMIER_LEAGUE_LOGO_BASE}/t${id}.png`,
+      logo: LOGO_SOURCES[0](id.toString()),
     }));
   }
 
@@ -138,6 +163,31 @@ class TeamLogoService {
     return null;
   }
 }
+
+// FPL team codes (from bootstrap-static API)
+// Used as fallback for logo URLs
+const FPL_TEAM_CODES: Record<string, number> = {
+  '1': 3,   // Arsenal
+  '2': 7,   // Aston Villa
+  '3': 91,  // Burnley
+  '4': 35,  // Bournemouth
+  '5': 94,  // Brentford
+  '6': 36,  // Brighton
+  '7': 8,   // Chelsea
+  '8': 31,  // Crystal Palace
+  '9': 11,  // Everton
+  '10': 54, // Fulham
+  '11': 2,  // Leeds
+  '12': 14, // Liverpool
+  '13': 43, // Man City
+  '14': 1,  // Man Utd
+  '15': 4,  // Newcastle
+  '16': 17, // Nott'm Forest
+  '17': 20, // Sunderland
+  '18': 6,  // Spurs
+  '19': 21, // West Ham
+  '20': 39, // Wolves
+};
 
 // FPL team IDs for Premier League teams (1-20)
 // These match the Fantasy Premier League API team IDs
