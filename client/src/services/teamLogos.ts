@@ -189,7 +189,7 @@ const FPL_TEAM_CODES: Record<string, number> = {
   '14': 1,  // Man Utd
   '15': 4,  // Newcastle
   '16': 17, // Nott'm Forest
-  '17': 20, // Sunderland
+  '17': 56, // Sunderland
   '18': 6,  // Spurs
   '19': 21, // West Ham
   '20': 39, // Wolves
