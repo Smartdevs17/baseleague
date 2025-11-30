@@ -26,11 +26,13 @@ export const config = {
 
   // API configuration
   api: {
-    baseUrl: import.meta.env.VITE_API_BASE_URL || 'https://baseleague.vercel.app',
-    football: {
-      key: import.meta.env.VITE_API_FOOTBALL_KEY || 'demo-key',
-      baseUrl: import.meta.env.VITE_API_FOOTBALL_BASE_URL || 'https://v3.football.api-sports.io',
-    },
+    // In development, use localhost API server. In production, use the deployed Vercel function.
+    baseUrl: import.meta.env.DEV ? 'http://localhost:3002' : (import.meta.env.VITE_API_BASE_URL || window.location.origin),
+    // Commented out - using FPL API directly now
+    // football: {
+    //   key: import.meta.env.VITE_API_FOOTBALL_KEY || 'demo-key',
+    //   baseUrl: import.meta.env.VITE_API_FOOTBALL_BASE_URL || 'https://v3.football.api-sports.io',
+    // },
   },
 
   // Chainlink Functions (no backend service needed)

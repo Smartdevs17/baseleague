@@ -5,13 +5,8 @@ const app = express()
 const PORT = process.env.PORT || 3002
 const FPL_API_BASE_URL = 'https://fantasy.premierleague.com/api'
 
-// Football Data API (for multiple leagues - requires free API key)
-const FOOTBALL_DATA_API_BASE_URL = 'https://api.football-data.org/v4'
-const FOOTBALL_DATA_API_KEY = process.env.FOOTBALL_DATA_API_KEY || ''
-
-// API Sports (alternative - requires API key)
-const API_SPORTS_BASE_URL = 'https://v3.football.api-sports.io'
-const API_SPORTS_KEY = process.env.API_SPORTS_KEY || ''
+// Note: FPL API only supports Premier League fixtures
+// For multiple leagues, you would need Football Data API or similar
 
 // Export for Vercel serverless
 export default app
@@ -74,54 +69,6 @@ async function getCurrentGameweek() {
 		console.warn('Could not fetch current gameweek:', error.message)
 	}
 	return 1
-}
-
-// Transform Football Data API fixture to our format
-function transformFootballDataFixture(fdFixture) {
-	let status = 'pending'
-	if (fdFixture.status === 'FINISHED') {
-		status = 'finished'
-	} else if (fdFixture.status === 'IN_PLAY' || fdFixture.status === 'PAUSED') {
-		status = 'live'
-	} else {
-		status = 'pending'
-	}
-
-	const homeTeam = fdFixture.homeTeam?.name || 'Unknown'
-	const awayTeam = fdFixture.awayTeam?.name || 'Unknown'
-	const homeTeamId = fdFixture.homeTeam?.id?.toString() || ''
-	const awayTeamId = fdFixture.awayTeam?.id?.toString() || ''
-
-	// Extract league and country from competition
-	const competition = fdFixture.competition || {}
-	const league = competition.name || 'Unknown League'
-	const country = competition.area?.name || 'Unknown Country'
-
-	return {
-		id: fdFixture.id.toString(),
-		externalId: fdFixture.id.toString(),
-		homeTeam,
-		awayTeam,
-		homeTeamId,
-		awayTeamId,
-		kickoffTime: fdFixture.utcDate || new Date().toISOString(),
-		status,
-		homeScore: fdFixture.score?.fullTime?.home ?? fdFixture.score?.halfTime?.home,
-		awayScore: fdFixture.score?.fullTime?.away ?? fdFixture.score?.halfTime?.away,
-		gameweek: 1, // Football Data API doesn't have gameweeks
-		league,
-		country,
-		pools: {
-			win: { total: 0, betCount: 0 },
-			draw: { total: 0, betCount: 0 },
-			lose: { total: 0, betCount: 0 },
-		},
-		winningOutcome: null,
-		isPayoutProcessed: false,
-		totalPoolSize: 0,
-		createdAt: new Date().toISOString(),
-		updatedAt: new Date().toISOString(),
-	}
 }
 
 // Transform FPL fixture to our format
@@ -332,84 +279,6 @@ app.get('/api/fixtures', async (req, res) => {
 // GET /api/fixtures-upcoming - Get only upcoming fixtures
 app.get('/api/fixtures-upcoming', async (req, res) => {
 	try {
-		// Try Football Data API first if key is available
-		if (FOOTBALL_DATA_API_KEY) {
-			console.log('📡 Fetching upcoming fixtures from Football Data API...')
-			
-			try {
-				const competitions = ['PL', 'PD', 'SA', 'BL1', 'FL1', 'DED']
-				const allFixtures = []
-				const now = new Date()
-				
-				for (const comp of competitions) {
-					try {
-						const response = await fetch(`${FOOTBALL_DATA_API_BASE_URL}/competitions/${comp}/matches?status=SCHEDULED`, {
-							headers: {
-								'X-Auth-Token': FOOTBALL_DATA_API_KEY,
-								'Accept': 'application/json',
-							},
-						})
-						
-						if (response.ok) {
-							const data = await response.json()
-							if (data.matches && Array.isArray(data.matches)) {
-								// Filter upcoming matches
-								const upcoming = data.matches
-									.filter((match) => {
-										if (!match.utcDate) return false
-										const kickoff = new Date(match.utcDate)
-										return kickoff > now
-									})
-									.map(transformFootballDataFixture)
-								allFixtures.push(...upcoming)
-							}
-						}
-					} catch (err) {
-						console.warn(`Could not fetch ${comp}:`, err.message)
-					}
-				}
-				
-				if (allFixtures.length > 0) {
-					console.log(`✅ Fetched ${allFixtures.length} upcoming fixtures from Football Data API`)
-					
-					// Apply filters
-					let filteredFixtures = allFixtures
-					const { league, country, search } = req.query
-					
-					if (league && league !== 'all') {
-						filteredFixtures = filteredFixtures.filter((f) =>
-							f.league?.toLowerCase().includes(league.toLowerCase())
-						)
-					}
-					
-					if (country && country !== 'all') {
-						filteredFixtures = filteredFixtures.filter((f) =>
-							f.country?.toLowerCase().includes(country.toLowerCase())
-						)
-					}
-					
-					if (search) {
-						const searchLower = search.toLowerCase()
-						filteredFixtures = filteredFixtures.filter(
-							(f) =>
-								f.homeTeam?.toLowerCase().includes(searchLower) ||
-								f.awayTeam?.toLowerCase().includes(searchLower) ||
-								f.league?.toLowerCase().includes(searchLower) ||
-								f.country?.toLowerCase().includes(searchLower)
-						)
-					}
-					
-					return res.json({
-						success: true,
-						fixtures: filteredFixtures,
-					})
-				}
-			} catch (err) {
-				console.warn('Football Data API failed, falling back to FPL API:', err.message)
-			}
-		}
-		
-		// Fallback to FPL API
 		console.log('📡 Fetching upcoming fixtures from FPL API (Premier League only)...')
 
 		// Fetch fixtures and teams in parallel
