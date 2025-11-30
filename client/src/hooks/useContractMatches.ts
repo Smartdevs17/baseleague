@@ -286,6 +286,9 @@ export const useContractMatches = () => {
 	}, [matches, findFixture, getTeamLogo])
 
 	const activeMatches = useMemo(() => {
+		// Debug: Log all matches before filtering for active
+		console.log(`🔍 [useContractMatches] Processing ${matches.length} matches for active matches`)
+		
 		// Active matches are those with multiple bets but not settled
 		const active = matches
 			.filter((m) => !m.isSettled && m.bets.length > 1)
