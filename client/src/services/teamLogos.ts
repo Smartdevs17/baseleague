@@ -171,12 +171,12 @@ class TeamLogoService {
 }
 
 // FPL team codes (from bootstrap-static API)
-// Used as fallback for logo URLs
+// These codes are used for more reliable Premier League badge URLs
 const FPL_TEAM_CODES: Record<string, number> = {
   '1': 3,   // Arsenal
   '2': 7,   // Aston Villa
-  '3': 91,  // Burnley
-  '4': 35,  // Bournemouth
+  '3': 90,  // Burnley
+  '4': 91,  // Bournemouth
   '5': 94,  // Brentford
   '6': 36,  // Brighton
   '7': 8,   // Chelsea
