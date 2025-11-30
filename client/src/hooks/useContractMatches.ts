@@ -111,6 +111,19 @@ export const useContractMatches = () => {
 
 				const results = await Promise.all(betPromises)
 				const validBets = results.filter((bet): bet is BetData => bet !== null)
+				
+				// Debug: Log fetched bets
+				console.log(`📊 [useContractMatches] Fetched ${validBets.length} bets from contract (nextBetId: ${nextBetId})`)
+				if (validBets.length > 0) {
+					console.log('📋 Sample bets:', validBets.slice(0, 5).map(b => ({
+						betId: Number(b.betId),
+						matchId: Number(b.matchId),
+						gameweek: Number(b.gameweek),
+						bettor: b.bettor,
+						prediction: Number(b.prediction),
+					})))
+				}
+				
 				setBets(validBets)
 			} catch (err) {
 				console.error('Error fetching bets:', err)
@@ -185,12 +198,26 @@ export const useContractMatches = () => {
 			if (!fixture) {
 				fixture = fixtures.find(f => parseInt(f.id) === matchId || parseInt(f.externalId) === matchId)
 			}
+			
+			// Debug fixture matching
+			if (!fixture) {
+				console.warn(`⚠️ [useContractMatches] No fixture found for matchId ${matchId}. Available fixtures: ${fixtures.length}, sample IDs: ${fixtures.slice(0, 5).map(f => f.externalId || f.id).join(', ')}`)
+			} else {
+				console.log(`✅ [useContractMatches] Found fixture for matchId ${matchId}: ${fixture.homeTeam} vs ${fixture.awayTeam}`)
+			}
+			
 			return fixture || null
 		}
 	}, [fixtures])
 
 	// Convert to Match format for UI
 	const openMatches = useMemo(() => {
+		// Debug: Log all matches before filtering
+		console.log(`🔍 [useContractMatches] Processing ${matches.length} matches for open matches`)
+		matches.forEach(m => {
+			console.log(`  Match ${m.gameweek}-${m.matchId}: ${m.bets.length} bets, settled: ${m.isSettled}`)
+		})
+		
 		// Open matches are those with exactly 1 bet (waiting for opponent)
 		const open = matches
 			.filter((m) => !m.isSettled && m.bets.length === 1)
