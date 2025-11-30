@@ -73,19 +73,30 @@ export const useResultsConsumer = () => {
 	}
 }
 
-// Hook for PredictionContract
-export const usePredictionContract = () => {
-	const { address, isConnected } = useAccount()
-	const { writeContract, data: hash, isPending, error } = useWriteContract()
-	const { isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({
-		hash,
-	})
-	
-	// Use ref to track hash so we can access latest value in async function
-	const hashRef = useRef(hash)
-	useEffect(() => {
-		hashRef.current = hash
-	}, [hash])
+	// Hook for PredictionContract
+	export const usePredictionContract = () => {
+		const { address, isConnected } = useAccount()
+		const { writeContract, data: hash, isPending, error } = useWriteContract()
+		const { isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({
+			hash,
+		})
+		
+		// Use refs to track state so we can access latest values in async function
+		const hashRef = useRef(hash)
+		const isPendingRef = useRef(isPending)
+		const errorRef = useRef(error)
+		
+		useEffect(() => {
+			hashRef.current = hash
+		}, [hash])
+		
+		useEffect(() => {
+			isPendingRef.current = isPending
+		}, [isPending])
+		
+		useEffect(() => {
+			errorRef.current = error
+		}, [error])
 
 	// Place a bet (sends ETH directly)
 	const placeBet = async (gameweek: number, matchId: number, prediction: Prediction, amount: string) => {
@@ -178,10 +189,10 @@ export const usePredictionContract = () => {
 			}
 			
 			// Fallback: check hook state (in case promise doesn't return hash)
-			// Wait a bit for hash to appear in hook state
+			// Wait longer for hash to appear in hook state (user might be signing)
 			console.log('⚠️ [placeBet] No hash from promise, checking hook state...')
-			const maxWait = 5000 // 5 seconds
-			const interval = 200 // Check every 200ms
+			const maxWait = 60000 // 60 seconds - give user time to sign in MetaMask
+			const interval = 500 // Check every 500ms
 			let elapsed = 0
 			
 			while (elapsed < maxWait) {
@@ -194,16 +205,37 @@ export const usePredictionContract = () => {
 					return hashRef.current
 				}
 				
-				// Check if there's an error
-				if (error) {
-					console.error('❌ [placeBet] Error from hook:', error)
-					throw error
+				// Check if there's an error (but only if it's not a pending state)
+				// Use refs to get latest values
+				const currentError = errorRef.current
+				const currentIsPending = isPendingRef.current
+				
+				if (currentError && !currentIsPending) {
+					// Check if error is user rejection
+					const errorMessage = currentError?.message || String(currentError) || ''
+					const isUserRejection = 
+						errorMessage.toLowerCase().includes('user rejected') ||
+						errorMessage.toLowerCase().includes('user denied') ||
+						errorMessage.toLowerCase().includes('rejected') ||
+						errorMessage.toLowerCase().includes('denied')
+					
+					if (isUserRejection) {
+						throw new Error('USER_REJECTED')
+					}
+					
+					console.error('❌ [placeBet] Error from hook:', currentError)
+					throw currentError
+				}
+				
+				// Log progress every 5 seconds
+				if (elapsed % 5000 === 0 && elapsed > 0) {
+					console.log(`⏳ [placeBet] Still waiting for hash... (${elapsed/1000}s elapsed, isPending: ${currentIsPending})`)
 				}
 			}
 			
 			// If we get here, hash never appeared
-			console.error('❌ [placeBet] Timeout waiting for hash')
-			throw new Error('Transaction hash not received. The transaction may have been rejected or is taking too long.')
+			console.error('❌ [placeBet] Timeout waiting for hash after 60 seconds')
+			throw new Error('Transaction hash not received. The transaction may have been rejected or is taking too long. Please check your wallet.')
 		} catch (err: any) {
 			console.error('❌ [placeBet] Error:', err)
 			
