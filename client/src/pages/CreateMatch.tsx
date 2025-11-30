@@ -407,7 +407,6 @@ const CreateMatch = () => {
                   homeTeamId: fixture.homeTeamId,
                   awayTeamId: fixture.awayTeamId,
                   league: fixture.league,
-                  country: fixture.country,
                 })
               }
               
