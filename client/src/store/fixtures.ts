@@ -13,6 +13,8 @@ export interface ApiFixture {
   homeScore?: number;
   awayScore?: number;
   gameweek: number;
+  league?: string;
+  country?: string;
   pools: {
     win: { total: number; betCount: number };
     draw: { total: number; betCount: number };
