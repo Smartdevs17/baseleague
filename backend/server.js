@@ -18,9 +18,13 @@ let gameweekCache = null
 
 // Helper function to get teams mapping
 async function getTeams() {
-	if (teamsCache) return teamsCache
+	if (teamsCache) {
+		console.log(`📋 Using cached teams (${Object.keys(teamsCache).length} teams)`)
+		return teamsCache
+	}
 
 	try {
+		console.log('📡 Fetching teams from FPL API...')
 		const response = await fetch(`${FPL_API_BASE_URL}/bootstrap-static/`)
 		if (response.ok) {
 			const data = await response.json()
@@ -33,12 +37,13 @@ async function getTeams() {
 						shortName: team.short_name,
 					}
 				})
+				console.log(`✅ Loaded ${data.teams.length} teams: ${data.teams.slice(0, 3).map(t => t.name).join(', ')}...`)
 			}
 			teamsCache = teams
 			return teams
 		}
 	} catch (error) {
-		console.warn('Could not fetch teams:', error.message)
+		console.error('❌ Could not fetch teams:', error.message)
 	}
 	return {}
 }
@@ -81,16 +86,19 @@ function transformFixture(fplFixture, currentGameweek, teams) {
 	const homeTeamId = homeTeamIdNum?.toString() || ''
 	const awayTeamId = awayTeamIdNum?.toString() || ''
 	
-	// Look up team names from teams cache
-	const homeTeam = teams[homeTeamIdNum]?.name || fplFixture.team_h_name || `Team ${homeTeamId}`
-	const awayTeam = teams[awayTeamIdNum]?.name || fplFixture.team_a_name || `Team ${awayTeamId}`
+	// Look up team names - teams object uses numeric keys
+	const homeTeamData = teams[homeTeamIdNum]
+	const awayTeamData = teams[awayTeamIdNum]
 	
-	// Debug log if team name not found
-	if (!teams[homeTeamIdNum]?.name && homeTeamIdNum) {
-		console.warn(`⚠️ Team name not found for home team ID: ${homeTeamIdNum}`)
+	const homeTeam = homeTeamData?.name || fplFixture.team_h_name || `Team ${homeTeamId}`
+	const awayTeam = awayTeamData?.name || fplFixture.team_a_name || `Team ${awayTeamId}`
+	
+	// Debug log if team name not found (only log first few to avoid spam)
+	if (!homeTeamData?.name && homeTeamIdNum && Object.keys(teams).length > 0) {
+		console.warn(`⚠️ Team name not found for home team ID: ${homeTeamIdNum}, available teams: ${Object.keys(teams).slice(0, 5).join(', ')}`)
 	}
-	if (!teams[awayTeamIdNum]?.name && awayTeamIdNum) {
-		console.warn(`⚠️ Team name not found for away team ID: ${awayTeamIdNum}`)
+	if (!awayTeamData?.name && awayTeamIdNum && Object.keys(teams).length > 0) {
+		console.warn(`⚠️ Team name not found for away team ID: ${awayTeamIdNum}, available teams: ${Object.keys(teams).slice(0, 5).join(', ')}`)
 	}
 
 	return {
