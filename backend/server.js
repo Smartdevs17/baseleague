@@ -117,7 +117,6 @@ function transformFixture(fplFixture, currentGameweek, teams) {
 		awayScore: fplFixture.team_a_score,
 		gameweek: fplFixture.event || currentGameweek,
 		league: 'Premier League', // FPL API is only for Premier League
-		country: 'England',
 		pools: {
 			win: { total: 0, betCount: 0 },
 			draw: { total: 0, betCount: 0 },
@@ -166,17 +165,11 @@ app.get('/api/fixtures', async (req, res) => {
 
 		// Apply filters if provided
 		let filteredFixtures = fixtures
-		const { league, country, search } = req.query
+		const { league, search } = req.query
 
 		if (league) {
 			filteredFixtures = filteredFixtures.filter((f) =>
 				f.league?.toLowerCase().includes(league.toLowerCase())
-			)
-		}
-
-		if (country) {
-			filteredFixtures = filteredFixtures.filter((f) =>
-				f.country?.toLowerCase().includes(country.toLowerCase())
 			)
 		}
 
@@ -251,17 +244,11 @@ app.get('/api/fixtures-upcoming', async (req, res) => {
 			.map((fplFixture) => transformFixture(fplFixture, currentGameweek, teams))
 
 		// Apply filters if provided
-		const { league, country, search } = req.query
+		const { league, search } = req.query
 
 		if (league) {
 			fixtures = fixtures.filter((f) =>
 				f.league?.toLowerCase().includes(league.toLowerCase())
-			)
-		}
-
-		if (country) {
-			fixtures = fixtures.filter((f) =>
-				f.country?.toLowerCase().includes(country.toLowerCase())
 			)
 		}
 

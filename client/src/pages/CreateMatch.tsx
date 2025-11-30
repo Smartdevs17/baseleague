@@ -40,8 +40,7 @@ const CreateMatch = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedFixture, setSelectedFixture] = useState<ApiFixture | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
-  const [leagueFilter, setLeagueFilter] = useState<string>('all');
-  const [countryFilter, setCountryFilter] = useState<string>('all');
+  const [selectedLeague, setSelectedLeague] = useState('All Leagues');
 
   // Preload team logos when fixtures are loaded
   useEffect(() => {
@@ -276,18 +275,12 @@ const CreateMatch = () => {
     };
   };
 
-  // Get unique leagues and countries for filters
-  const uniqueLeagues = Array.from(new Set(fixtures.map(f => f.league).filter(Boolean))).sort()
-  const uniqueCountries = Array.from(new Set(fixtures.map(f => f.country).filter(Boolean))).sort()
+  // Get unique leagues for filters
+  const uniqueLeagues = ['All Leagues', ...new Set(fixtures.map(f => f.league).filter(Boolean))].sort()
 
   const filteredFixtures = fixtures.filter((fixture) => {
     // League filter
-    if (leagueFilter !== 'all' && fixture.league !== leagueFilter) {
-      return false
-    }
-
-    // Country filter
-    if (countryFilter !== 'all' && fixture.country !== countryFilter) {
+    if (selectedLeague !== 'All Leagues' && fixture.league !== selectedLeague) {
       return false
     }
 
@@ -297,8 +290,7 @@ const CreateMatch = () => {
       return (
         fixture.homeTeam.toLowerCase().includes(query) ||
         fixture.awayTeam.toLowerCase().includes(query) ||
-        (fixture.league || '').toLowerCase().includes(query) ||
-        (fixture.country || '').toLowerCase().includes(query)
+        (fixture.league || '').toLowerCase().includes(query)
       )
     }
 
@@ -436,11 +428,6 @@ const CreateMatch = () => {
                         <Badge variant="outline" className="text-xs w-fit">
                           {fixture.league || 'Premier League'}
                         </Badge>
-                        {fixture.country && (
-                          <Badge variant="secondary" className="text-xs w-fit">
-                            {fixture.country}
-                          </Badge>
-                        )}
                       </div>
                       <div className="flex items-center gap-2 text-xs text-muted-foreground">
                         <Calendar className="w-3 h-3" />
