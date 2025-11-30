@@ -339,7 +339,11 @@ export const useContractMatches = () => {
 			// Filter out matches where creator and joiner are the same address
 			.filter((m) => {
 				if (!m.joiner) return true
-				return m.creator.toLowerCase() !== m.joiner.toLowerCase()
+				const isSameAddress = m.creator.toLowerCase() === m.joiner.toLowerCase()
+				if (isSameAddress) {
+					console.warn(`⚠️ [useContractMatches] Filtering out match ${m.id} - creator and joiner are the same address: ${m.creator}`)
+				}
+				return !isSameAddress
 			})
 		
 		return active
