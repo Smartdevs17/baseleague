@@ -8,18 +8,24 @@ interface TeamLogoData {
   shortName?: string;
 }
 
+// Use FPL team codes for more reliable logo URLs
+// FPL API provides team codes that work better with Premier League badge URLs
+const getLogoUrlByCode = (teamId: string): string | null => {
+	const teamCode = FPL_TEAM_CODES[teamId];
+	if (!teamCode) return null;
+	// Try with team code first (more reliable)
+	return `https://resources.premierleague.com/premierleague/badges/50/t${teamCode}.png`;
+};
+
 // Multiple logo sources with fallback
 // Try different CDN sources for Premier League team logos
 const LOGO_SOURCES = [
-	// Source 1: Premier League official (some teams may return 403)
+	// Source 1: Using FPL team code (most reliable)
+	getLogoUrlByCode,
+	// Source 2: Premier League official with team ID
 	(teamId: string) => `https://resources.premierleague.com/premierleague/badges/50/t${teamId}.png`,
-	// Source 2: Alternative CDN format
+	// Source 3: Alternative CDN format
 	(teamId: string) => `https://resources.premierleague.com/premierleague/badges/t${teamId}.png`,
-	// Source 3: Using team code from FPL API (if available)
-	(teamId: string) => {
-		const teamCode = FPL_TEAM_CODES[teamId];
-		return teamCode ? `https://resources.premierleague.com/premierleague/badges/50/t${teamCode}.png` : null;
-	},
 ];
 
 // Cache for loaded logos to avoid repeated requests
