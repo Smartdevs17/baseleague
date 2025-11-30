@@ -175,17 +175,22 @@ export const useResultsConsumer = () => {
 			let promiseResult: `0x${string}` | undefined = undefined
 			let promiseError: any = null
 			
-			// Start waiting for promise (in case it resolves)
+			// Start waiting for promise (in case it resolves or rejects)
+			// Note: In Wagmi v2, the promise might not resolve with hash immediately
+			// The hash usually appears in hook state after user confirms
 			writeContractPromise
 				.then((result) => {
 					promiseResolved = true
 					promiseResult = result
 					console.log('✅ [placeBet] writeContract promise resolved:', result)
+					// If promise resolved with hash, we can return it
+					// But usually hash appears in hook state instead
 				})
 				.catch((err) => {
 					promiseResolved = true
 					promiseError = err
 					console.log('❌ [placeBet] writeContract promise rejected:', err)
+					// This usually means user rejected or there's an error
 				})
 			
 			// Wait for hash to appear (either from promise or hook state)
@@ -193,13 +198,19 @@ export const useResultsConsumer = () => {
 				await new Promise(resolve => setTimeout(resolve, interval))
 				elapsed += interval
 				
-				// Check if promise resolved with hash
+				// Check hook state for hash FIRST (this is where it usually appears)
+				if (hashRef.current) {
+					console.log('✅ [placeBet] Hash found in hook state:', hashRef.current)
+					return hashRef.current
+				}
+				
+				// Check if promise resolved with hash (less common in Wagmi v2)
 				if (promiseResolved && promiseResult) {
 					console.log('✅ [placeBet] Hash from promise:', promiseResult)
 					return promiseResult
 				}
 				
-				// Check if promise rejected (user rejection)
+				// Check if promise rejected (user rejection or error)
 				if (promiseResolved && promiseError) {
 					const errorMessage = promiseError?.message || String(promiseError) || ''
 					const errorCode = promiseError?.code || promiseError?.error?.code || ''
@@ -220,12 +231,6 @@ export const useResultsConsumer = () => {
 					
 					// Real error from promise
 					throw promiseError
-				}
-				
-				// Check hook state for hash
-				if (hashRef.current) {
-					console.log('✅ [placeBet] Hash found in hook state:', hashRef.current)
-					return hashRef.current
 				}
 				
 				// Check for errors in hook state (but only if not pending)
