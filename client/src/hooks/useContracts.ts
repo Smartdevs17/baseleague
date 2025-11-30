@@ -140,12 +140,35 @@ export const usePredictionContract = () => {
 			
 			// Wait for the promise to resolve (user confirms in MetaMask)
 			// This should return the hash
+			// The promise will reject if user rejects, but we need to distinguish that from other errors
 			let txHash: `0x${string}` | undefined
 			try {
 				txHash = await txHashPromise
 				console.log('✅ [placeBet] writeContract promise resolved with hash:', txHash)
 			} catch (promiseError: any) {
 				console.error('❌ [placeBet] writeContract promise rejected:', promiseError)
+				
+				// Check if this is a user rejection (not a real error)
+				const errorMessage = promiseError?.message || String(promiseError) || ''
+				const errorCode = promiseError?.code || promiseError?.error?.code || ''
+				
+				// User rejection codes and messages
+				const isUserRejection = 
+					errorCode === 4001 || // User rejected request
+					errorCode === 'ACTION_REJECTED' ||
+					errorMessage.toLowerCase().includes('user rejected') ||
+					errorMessage.toLowerCase().includes('user denied') ||
+					errorMessage.toLowerCase().includes('rejected') ||
+					errorMessage.toLowerCase().includes('denied') ||
+					errorMessage.toLowerCase().includes('cancelled') ||
+					errorMessage.toLowerCase().includes('canceled')
+				
+				if (isUserRejection) {
+					// User rejected - this is not an error, just a cancellation
+					throw new Error('USER_REJECTED')
+				}
+				
+				// Real error - re-throw
 				throw promiseError
 			}
 			
@@ -183,6 +206,14 @@ export const usePredictionContract = () => {
 			throw new Error('Transaction hash not received. The transaction may have been rejected or is taking too long.')
 		} catch (err: any) {
 			console.error('❌ [placeBet] Error:', err)
+			
+			// Check if this is a user rejection
+			const errorMessage = err?.message || String(err) || ''
+			if (errorMessage === 'USER_REJECTED') {
+				// User rejected - don't treat as error, just throw a specific error
+				throw new Error('USER_REJECTED')
+			}
+			
 			// Don't show toast here - let the caller handle it
 			// Re-throw so caller can handle the error appropriately
 			throw err

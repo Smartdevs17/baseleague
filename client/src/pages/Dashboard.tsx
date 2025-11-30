@@ -201,7 +201,11 @@ const Dashboard = () => {
         selectedMatchId: selectedMatch.id,
       });
       
-      toast.info('Joining match...');
+      toast.info('Please confirm the transaction in MetaMask...', {
+        id: 'join-tx',
+        duration: 10000,
+      });
+      
       const txHash = await placeBet(gameweek, contractMatchId, contractPrediction, stakeAmountStr);
       
       console.log('✅ [handleJoinConfirm] Bet placed!', {
@@ -212,6 +216,8 @@ const Dashboard = () => {
         expectedMatchKey: `${gameweek}-${contractMatchId}`,
       });
       
+      // Dismiss confirmation toast and show success
+      toast.dismiss('join-tx');
       toast.success('Transaction submitted!', {
         description: `Your bet is being processed. The match will move to Active Matches once confirmed (usually 10-30 seconds).`,
         duration: 5000,
@@ -233,7 +239,28 @@ const Dashboard = () => {
       console.log(`   4. Match key "${gameweek}-${contractMatchId}" should have 2 bets`);
     } catch (error) {
       console.error('Failed to join match:', error);
-      toast.error('Failed to join match. Please try again.');
+      
+      // Dismiss any pending toasts
+      toast.dismiss('join-tx');
+      
+      // Check if this is a user rejection
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      
+      if (errorMessage === 'USER_REJECTED' || 
+          errorMessage.includes('User rejected') || 
+          errorMessage.includes('denied') || 
+          errorMessage.includes('user rejected') ||
+          errorMessage.includes('cancelled') ||
+          errorMessage.includes('canceled')) {
+        // User cancelled - don't show error, just close modal
+        setJoinModalOpen(false);
+        return;
+      }
+      
+      // Real error - show error toast
+      toast.error('Failed to join match. Please try again.', {
+        description: errorMessage || 'An error occurred while joining the match.',
+      });
     }
   };
 

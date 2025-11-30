@@ -136,12 +136,27 @@ const CreateMatch = () => {
         console.log('  Hash received:', hash);
       } catch (err: unknown) {
         console.error('❌ [CreateMatch] placeBet error:', err);
-        // If placeBet throws, it might be user rejection or other error
+        
+        // Check if this is a user rejection (not a real error)
         const errorMessage = err instanceof Error ? err.message : String(err);
-        if (errorMessage.includes('User rejected') || errorMessage.includes('denied') || errorMessage.includes('user rejected') || errorMessage.includes('rejected')) {
-          throw new Error('Transaction cancelled by user');
+        
+        // User rejection - silently handle, just close modal
+        if (errorMessage === 'USER_REJECTED' || 
+            errorMessage.includes('User rejected') || 
+            errorMessage.includes('denied') || 
+            errorMessage.includes('user rejected') || 
+            errorMessage.includes('rejected') ||
+            errorMessage.includes('cancelled') ||
+            errorMessage.includes('canceled')) {
+          // User cancelled - just close modal, no error toast
+          toast.dismiss('confirm-tx');
+          setModalOpen(false);
+          setSelectedFixture(null);
+          return; // Exit early, don't show error
         }
-        throw err; // Re-throw other errors
+        
+        // Real error - re-throw to be handled below
+        throw err;
       }
       
       // If hash is still not available, try to get it from the hook state
@@ -235,14 +250,20 @@ const CreateMatch = () => {
     } catch (error: unknown) {
       console.error('Failed to create match:', error);
       
+      // Dismiss any pending toasts
+      toast.dismiss('confirm-tx');
+      toast.dismiss('waiting-tx');
+      
       // Type guard for error
       const errorMessage = error instanceof Error ? error.message : String(error);
       
       // More specific error messages
-      if (errorMessage.includes('User rejected') || errorMessage.includes('denied') || errorMessage.includes('user rejected')) {
-        toast.error('Transaction cancelled', {
-          description: 'You cancelled the transaction in MetaMask.',
-        });
+      // Note: User rejection is already handled above, so we shouldn't reach here for that
+      if (errorMessage.includes('User rejected') || errorMessage.includes('denied') || errorMessage.includes('user rejected') || errorMessage === 'USER_REJECTED') {
+        // User cancelled - already handled above, but just in case
+        setModalOpen(false);
+        setSelectedFixture(null);
+        return;
       } else if (errorMessage.includes('dropped') || errorMessage.includes('replaced')) {
         toast.error('Transaction was dropped', {
           description: 'Please try again with higher gas or wait for network congestion to clear.',
