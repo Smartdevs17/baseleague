@@ -197,10 +197,11 @@ export const useContractMatches = () => {
 			.map((m) => {
 				const fixture = findFixture(m.matchId)
 				
-				// If fixture found, use real data; otherwise use placeholder
+				// If fixture found, use real data with actual match time from FPL API
+				// Otherwise use placeholder (fallback should be rare now that we fetch from API)
 				const fixtureData = fixture ? {
 					id: parseInt(fixture.externalId || fixture.id),
-					date: fixture.kickoffTime,
+					date: fixture.kickoffTime, // Actual match time from FPL API, not system time
 					homeTeam: fixture.homeTeam,
 					awayTeam: fixture.awayTeam,
 					homeTeamLogo: getTeamLogo(fixture.homeTeamId, fixture.homeTeam),

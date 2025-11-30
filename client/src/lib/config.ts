@@ -33,10 +33,10 @@ export const config = {
     },
   },
 
-  // Oracle service
-  oracle: {
-    privateKey: import.meta.env.VITE_ORACLE_PRIVATE_KEY,
-    serviceUrl: import.meta.env.VITE_ORACLE_SERVICE_URL || 'http://localhost:3002',
+  // Chainlink Functions (no backend service needed)
+  chainlink: {
+    functionsRouter: import.meta.env.VITE_CHAINLINK_FUNCTIONS_ROUTER || '0xf9B8fc078197181C841c296C876945aaa425B278',
+    donId: import.meta.env.VITE_CHAINLINK_DON_ID || 'fun-base-sepolia-1',
   },
 
   // Analytics and monitoring
@@ -92,7 +92,7 @@ if (config.app.debug) {
     wallet: { ...config.wallet, projectId: config.wallet.projectId ? '***' : undefined },
     contracts: config.contracts,
     api: { ...config.api, football: { ...config.api.football, key: config.api.football.key ? '***' : undefined } },
-    oracle: { ...config.oracle, privateKey: config.oracle.privateKey ? '***' : undefined },
+    chainlink: config.chainlink,
     features: config.features,
   });
 }

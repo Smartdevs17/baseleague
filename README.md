@@ -3,7 +3,7 @@
 [![Built with React](https://img.shields.io/badge/Built%20with-React-61DAFB?style=for-the-badge&logo=react)](https://reactjs.org/)
 [![Powered by Base](https://img.shields.io/badge/Powered%20by-Base-0052FF?style=for-the-badge&logo=base)](https://base.org/)
 [![Smart Contracts](https://img.shields.io/badge/Smart%20Contracts-Solidity-363636?style=for-the-badge&logo=solidity)](https://soliditylang.org/)
-[![Database MongoDB](https://img.shields.io/badge/Database-MongoDB-47A248?style=for-the-badge&logo=mongodb)](https://www.mongodb.com/atlas)
+[![Chainlink Functions](https://img.shields.io/badge/Oracle-Chainlink%20Functions-375BD2?style=for-the-badge&logo=chainlink)](https://chain.link/functions)
 [![Deployed on Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-000000?style=for-the-badge&logo=vercel)](https://vercel.com/)
 
 > **A decentralized fantasy football prediction platform built on **Base Sepolia Testnet**. Compete head-to-head in Premier League matches, stake ETH, predict outcomes, and win rewards.
@@ -25,8 +25,8 @@ BaseLeague is a Web3 fantasy football platform built on Base Sepolia Testnet tha
 2. The match automatically moves to "Active Matches" once both bets are placed
 
 **After the match finishes:**
-- The backend oracle service fetches the final score from the FPL API
-- The result is submitted to the smart contract
+- Chainlink Functions automatically fetches the final score from the FPL API
+- The result is stored on-chain via the ResultsConsumer contract
 - Winners can settle the match and receive their share of the prize pool
 - Alice wins if Arsenal wins, Bob wins if Chelsea wins, or both get refunded if it's a draw
 
@@ -34,36 +34,35 @@ BaseLeague is a Web3 fantasy football platform built on Base Sepolia Testnet tha
 
 ### Smart Contracts (Base Sepolia)
 
-- **`CustomResultsOracle.sol`** - Custom oracle contract that stores match results on-chain
-  - Authorized oracles can submit match results
-  - Owner can update results for corrections
-  - Stores: gameweek, matchId, homeScore, awayScore, status
+- **`ResultsConsumer.sol`** - Chainlink Functions consumer contract
+  - Requests match results from FPL API via Chainlink Functions
+  - Stores match outcomes on-chain (gameweek, matchId, homeScore, awayScore, status)
+  - Provides on-chain access to match results for settlement
 
 - **`PredictionContract.sol`** - Main betting contract
   - Users place bets by sending ETH directly
   - Groups bets into matches (same gameweek + matchId)
-  - Settles matches based on results from CustomResultsOracle
+  - Settles matches based on results from ResultsConsumer (Chainlink Functions)
   - Distributes winnings to correct predictions
 
-### Backend Oracle Service
+### Oracle Architecture
 
-**Why a Custom Oracle?**
+**Chainlink Functions Integration:**
 
-Base Sepolia testnet provides a reliable environment for decentralized applications. To work on Base Sepolia, we built:
+BaseLeague uses Chainlink Functions for decentralized oracle services:
 
-- **Custom Oracle Contract** - On-chain storage for match results
-- **Backend Oracle Service** - Node.js service that:
-  - Polls FPL API every 5 minutes for match results
-  - Stores matches in MongoDB
-  - Automatically submits finished matches to the CustomResultsOracle contract
-  - Tracks submissions to prevent duplicates
+- **Chainlink Functions** - Fetches match results from FPL API automatically
+  - No backend server needed - fully decentralized
+  - Results are fetched on-demand when matches need to be settled
+  - All data is stored on-chain via ResultsConsumer contract
+  - Requires Chainlink Functions subscription (funded with LINK tokens)
 
-**Tech Stack:**
-- Node.js with Express
-- MongoDB with Mongoose
-- ethers.js for contract interactions
-- node-cron for scheduled jobs
-- FPL API for match data
+**How it works:**
+1. When a match needs to be settled, `PredictionContract` calls `ResultsConsumer.requestResult()`
+2. `ResultsConsumer` sends a request to Chainlink Functions
+3. Chainlink Functions executes JavaScript code to fetch from FPL API
+4. Results are returned and stored on-chain in `ResultsConsumer`
+5. `PredictionContract` reads results from `ResultsConsumer` and settles bets
 
 
 ## 🚀 Quick Start
@@ -71,8 +70,8 @@ Base Sepolia testnet provides a reliable environment for decentralized applicati
 ### Prerequisites
 
 - Node.js 18+ and npm
-- MongoDB (local or Atlas)
 - Wallet with ETH on Base Sepolia testnet
+- Chainlink Functions subscription (funded with LINK tokens)
 - Git
 
 ### Installation
@@ -84,10 +83,6 @@ cd baseleague
 
 # Install contract dependencies
 cd contracts
-npm install
-
-# Install backend dependencies
-cd ../backend
 npm install
 ```
 
@@ -104,22 +99,6 @@ Edit `contracts/.env`:
 ```env
 PRIVATE_KEY=your_private_key_here
 BASE_SEPOLIA_RPC_URL=https://base-sepolia-rpc.publicnode.com
-```
-
-#### 2. Backend
-
-```bash
-cd backend
-cp .env.example .env
-```
-
-Edit `backend/.env`:
-```env
-MONGODB_URI=mongodb://localhost:27017/baseleague
-BASE_SEPOLIA_RPC_URL=https://base-sepolia-rpc.publicnode.com
-CUSTOM_RESULTS_ORACLE_ADDRESS=0x816B6a402cC26F0D5B3b28794061C75BC673490f
-PREDICTION_CONTRACT_ADDRESS=0xfBa3E093ad88Ad56abd90956Bc383898bb85e0b2
-ORACLE_PRIVATE_KEY=your_oracle_private_key_here
 ```
 
 ### Deployment
@@ -203,7 +182,7 @@ baseleague/
 
 ## 📚 Documentation
 
-- **Backend**: See `backend/README.md` for oracle service setup
+- **Chainlink Functions**: See `contracts/CHAINLINK_SETUP.md` for oracle setup
 - **Contracts**: See `contracts/README.md` for contract details
 
 ## 🤝 Contributing
