@@ -9,6 +9,8 @@ const FPL_API_BASE_URL = 'https://fantasy.premierleague.com/api'
 // For multiple leagues, you would need Football Data API or similar
 
 // Export for Vercel serverless
+// For Vercel, we need to export the app directly
+// The vercel.json routes will handle routing to this file
 export default app
 
 // Enable CORS for all routes
