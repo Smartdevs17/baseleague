@@ -71,7 +71,7 @@ export const useContractMatches = () => {
 		abi: ABIS.PREDICTION_CONTRACT,
 		functionName: 'nextBetId',
 		query: {
-			enabled: isConnected,
+			enabled: true, // allow viewing even when wallet is not connected
 			refetchInterval: 5000, // Refetch every 5 seconds to catch new bets
 		},
 	})
@@ -80,7 +80,7 @@ export const useContractMatches = () => {
 
 	// Fetch all bets from contract
 	useEffect(() => {
-		if (!isConnected || !publicClient || !nextBetId || nextBetId === 0n) {
+		if (!publicClient || !nextBetId || nextBetId === 0n) {
 			setBets([])
 			return
 		}
@@ -264,6 +264,12 @@ export const useContractMatches = () => {
 					awayTeamLogo: '',
 					status: 'upcoming' as const,
 					league: 'Premier League',
+				}
+
+				// Hide finished fixtures from the open list
+				if (fixture?.status === 'finished') {
+					console.warn(`⚠️ [useContractMatches] Hiding finished fixture from open matches: ${m.gameweek}-${m.matchId}`)
+					return null
 				}
 
 				const predictionValue = Number(m.bets[0]?.prediction || 0n)
