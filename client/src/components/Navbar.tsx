@@ -2,6 +2,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { Trophy } from 'lucide-react';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { useAccount } from 'wagmi';
+import { Badge } from '@/components/ui/badge';
 
 const Navbar = () => {
   const location = useLocation();
@@ -22,7 +23,7 @@ const Navbar = () => {
             </span>
           </Link>
 
-          <div className="hidden md:flex items-center gap-6">
+          <div className="hidden lg:flex items-center gap-4">
             <Link
               to="/app"
               className={`text-sm font-medium transition-colors hover:text-primary ${
@@ -46,6 +47,15 @@ const Navbar = () => {
               }`}
             >
               My Matches
+            </Link>
+            <Link
+              to="/squad"
+              className={`text-sm font-medium transition-colors hover:text-primary flex items-center gap-2 ${
+                isActive('/squad') ? 'text-primary' : 'text-muted-foreground'
+              }`}
+            >
+              Fantasy
+              <Badge variant="secondary" className="text-xs px-1.5 py-0">Soon</Badge>
             </Link>
             <Link
               to="/leaderboard"

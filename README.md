@@ -6,14 +6,12 @@
 [![Chainlink Functions](https://img.shields.io/badge/Oracle-Chainlink%20Functions-375BD2?style=for-the-badge&logo=chainlink)](https://chain.link/functions)
 [![Deployed on Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-000000?style=for-the-badge&logo=vercel)](https://vercel.com/)
 
-> **A decentralized fantasy football prediction platform built on **Base Sepolia Testnet**. Compete head-to-head in Premier League matches, stake ETH, predict outcomes, and win rewards.
+> **A decentralized fantasy football prediction platform built on Base Sepolia Testnet.** Compete head-to-head in Premier League matches, stake ETH, predict outcomes, and win rewards. Backend now handles results (FPL fallback); Chainlink UI requests are disabled, but contracts remain compatible.
 
 ## 🎯 Project Overview
-
-BaseLeague is a Web3 fantasy football platform built on Base Sepolia Testnet that enables decentralized match predictions and automated result settlement.
+BaseLeague is a Web3 fantasy football platform on Base Sepolia that enables decentralized match predictions and automated result settlement. Fantasy-style features (squad, transfers, chips, mini-leagues) are planned and marked "Coming Soon" in the UI.
 
 ## 📖 User Story
-
 **Alice** wants to bet on an upcoming Arsenal vs Chelsea match. She:
 1. Connects her wallet to BaseLeague on Base Sepolia
 2. Browses available matches on the Dashboard
@@ -25,227 +23,157 @@ BaseLeague is a Web3 fantasy football platform built on Base Sepolia Testnet tha
 2. The match automatically moves to "Active Matches" once both bets are placed
 
 **After the match finishes:**
-- Chainlink Functions automatically fetches the final score from the FPL API
-- The result is stored on-chain via the ResultsConsumer contract
-- Winners can settle the match and receive their share of the prize pool
-- Alice wins if Arsenal wins, Bob wins if Chelsea wins, or both get refunded if it's a draw
+- Backend fetches the final score (FPL fallback) and stores the result via the ResultsConsumer-compatible flow
+- Result is used to settle via `PredictionContract`
+- Winners receive their share of the prize pool
+- If only one bettor (unmatched), owner can refund in full (no platform fee)
 
 ## 🏗️ Architecture
-
 ### Smart Contracts (Base Sepolia)
-
 - **`ResultsConsumer.sol`** - Chainlink Functions consumer contract
-  - Requests match results from FPL API via Chainlink Functions
+  - Can request match results from FPL API via Chainlink Functions (UI flow disabled; backend handles results)
   - Stores match outcomes on-chain (gameweek, matchId, homeScore, awayScore, status)
-  - Provides on-chain access to match results for settlement
-
 - **`PredictionContract.sol`** - Main betting contract
-  - Users place bets by sending ETH directly
-  - Groups bets into matches (same gameweek + matchId)
-  - Settles matches based on results from ResultsConsumer (Chainlink Functions)
-  - Distributes winnings to correct predictions
-  - Owner can refund unmatched single-sided bets in full (no platform fee) when a match never gets a second bettor
+  - Users place bets with ETH
+  - Groups bets by gameweek + matchId
+  - Settles matches from on-chain outcome
+  - Owner can refund unmatched single-sided bets in full (no platform fee)
 
-### Oracle Architecture
-
-**Chainlink Functions Integration:**
-
-BaseLeague uses Chainlink Functions for decentralized oracle services:
-
-- **Chainlink Functions** - Fetches match results from FPL API automatically
-  - No backend server needed - fully decentralized
-  - Results are fetched on-demand when matches need to be settled
-  - All data is stored on-chain via ResultsConsumer contract
-  - Requires Chainlink Functions subscription (funded with LINK tokens)
-
-**How it works:**
-1. When a match needs to be settled, `PredictionContract` calls `ResultsConsumer.requestResult()`
-2. `ResultsConsumer` sends a request to Chainlink Functions
-3. Chainlink Functions executes JavaScript code to fetch from FPL API
-4. Results are returned and stored on-chain in `ResultsConsumer`
-5. `PredictionContract` reads results from `ResultsConsumer` and settles bets
-
+### Oracle / Backend Flow
+- Primary (current): backend fetches results (FPL) → sets result → calls `settleMatch`.
+- Chainlink Functions remains compatible but is not invoked from the UI.
 
 ## 🚀 Quick Start
-
 ### Prerequisites
-
 - Node.js 18+ and npm
 - Wallet with ETH on Base Sepolia testnet
-- Chainlink Functions subscription (funded with LINK tokens)
 - Git
 
 ### Installation
-
 ```bash
-# Clone the repository
 git clone <repository-url>
 cd baseleague
 
-# Install contract dependencies
-cd contracts
-npm install
+# Contracts
+cd contracts && npm install
 
-# Install backend API server dependencies
-cd ../backend
-npm install
+# Backend
+cd ../backend && npm install
 
-# Install client dependencies
-cd ../client
-npm install
+# Client
+cd ../client && npm install
 ```
 
 ### Configuration
-
-#### 1. Contracts
-
+#### Contracts
 ```bash
 cd contracts
 cp .env.example .env
 ```
+Fill `PRIVATE_KEY`, `BASE_SEPOLIA_RPC_URL`.
 
-Edit `contracts/.env`:
-```env
-PRIVATE_KEY=your_private_key_here
-BASE_SEPOLIA_RPC_URL=https://base-sepolia-rpc.publicnode.com
+#### Backend
+```bash
+cd backend
+cp .env.example .env
 ```
+Set `PRIVATE_KEY`, `OWNER_ADDRESS`, `PREDICTION_CONTRACT_ADDRESS`, `RESULTS_CONSUMER_ADDRESS`, `RPC_URL`.
+
+#### Client
+```bash
+cd client
+cp .env.example .env
+```
+Set contract addresses and WalletConnect project ID.
 
 ### Deployment
-
-#### Deploy Contracts
-
 ```bash
 cd contracts
 npm run deploy:base-sepolia
 ```
+Updates `.env` files with deployed addresses.
 
-This will deploy:
-- ResultsConsumer (Chainlink Functions consumer)
-- PredictionContract
-
-Update `.env` files with the deployed addresses.
-
-#### Setup Chainlink Functions
-
-1. **Create Chainlink Functions Subscription:**
-   - Visit [Chainlink Functions App](https://functions.chain.link/)
-   - Connect your wallet (Base Sepolia network)
-   - Create a new subscription
-   - Fund it with LINK tokens (at least 2-5 LINK for testing)
-
-2. **Authorize ResultsConsumer Contract:**
-   - In the Functions App, add your deployed `ResultsConsumer` contract address as a consumer
-   - This allows the contract to make requests
-
-3. **Set Subscription ID:**
-   ```bash
-   cd contracts
-   npm run set-subscription
-   ```
-   Enter your subscription ID when prompted.
-
-See `contracts/CHAINLINK_SETUP.md` for detailed setup instructions.
-
-#### Start Backend API Server (for fixtures)
-
-The backend API server proxies football API requests and handles CORS:
-
+### Backend Server
 ```bash
 cd backend
 npm start
 ```
-
-The server will run on `http://localhost:3002` and provide:
-- `GET /api/fixtures` - All fixtures
-- `GET /api/fixtures-upcoming` - Upcoming fixtures only
-
-**API Configuration:**
-
-By default, the backend uses **FPL API** (Premier League only). To support multiple leagues and countries:
-
-1. Get a free API key from [Football Data API](https://www.football-data.org/)
-2. Create `backend/.env` file:
-   ```env
-   FOOTBALL_DATA_API_KEY=your_api_key_here
-   ```
-3. Restart the backend server
-
-The backend will automatically:
-- Use Football Data API if key is provided (supports multiple leagues/countries)
-- Fall back to FPL API if no key (Premier League only)
-- Filter fixtures by league and country
-- Provide correct team names, leagues, and countries
-
-**Note:** 
-- The client is configured to use `http://localhost:3002` in development mode
-- The backend automatically deploys to Vercel as serverless functions when pushed to main branch
-- In production, it will be available at `https://baseleague.vercel.app/api/*`
+Serves fixtures/results at `http://localhost:3002` in development.
 
 ## 📁 Project Structure
-
 ```
 baseleague/
-├── contracts/          # Smart contracts (Hardhat)
-│   ├── contracts/      # Solidity contracts
-│   ├── scripts/        # Deployment scripts
-│   └── test/           # Contract tests
-├── backend/            # API server for FPL API proxy
-│   ├── server.js      # Express server with CORS (deploys to Vercel)
-│   └── vercel.json    # Vercel deployment config
-└── client/             # Frontend application
+├── contracts/   # Solidity, Hardhat, scripts, tests
+├── backend/     # Express server, settlement/cron scripts
+└── client/      # React frontend (Vite)
 ```
 
 ## 🔗 Deployed Contracts (Base Sepolia)
-
-- **ResultsConsumer**: `0xaF404EA0C622c1bcd7ddca1DC866Ad2eAe248592`
-- **PredictionContract**: `0xF6Ee0a3a8Ea1fE73D0DFfac8419bF676276D56cB`
+- **ResultsConsumer**: `0xA7C6A76A73Fe9CB5Bb508e0277e064678C2d6D8D`
+- **PredictionContract**: `0xd3A3f2c96b8a5390D29893184cc236b2b5767e43`
 - **Network**: Base Sepolia (Chain ID: 84532)
-- **Explorer**: [Base Sepolia Explorer](https://sepolia.basescan.org)
+- **Explorer**: https://sepolia.basescan.org
 
 ## 🛠️ Tech Stack
-
-### Smart Contracts
-- Solidity 0.8.20
-- Hardhat
-- OpenZeppelin Contracts
-- ethers.js
-
-### Oracle
-- Chainlink Functions
-- ResultsConsumer contract
-
+- Solidity 0.8.20, Hardhat, OpenZeppelin, ethers.js
+- Backend: Node/Express
+- Frontend: React, Vite, Wagmi, RainbowKit
+- Oracle-compatible: Chainlink Functions (UI disabled; backend handles results)
 
 ## 📝 Key Features
+### Current
+- Head-to-head match betting with ETH stakes
+- Backend result fetch (FPL fallback) → settlement
+- Refund unmatched bets (no platform fee)
+- Leaderboard tracking
 
-- ✅ Automatic result submission via oracle
-- ✅ Match settlement and prize distribution
+### Planned / Coming Soon (Fantasy & Social)
+- Squad Selection: 15 players (2 GK, 5 DEF, 5 MID, 3 FWD), 100.0M budget
+- Transfers: 1 free transfer per gameweek; extra transfers cost -4 points
+- Chips: Wildcard (2/season), Free Hit (1), Triple Captain (1), Bench Boost (1)
+- Gameweek Management: set XI, captain/vice; points from goals/assists/clean sheets/saves/bonus; transfer hits
+- Mini-Leagues: private leagues with invite link/code; classic & H2H formats
+- Player Stats & History: points, price changes, GW history, transfer log
+- NFTs (Planned): optional collectibles for achievements (weekly winner, top %, clean-sheet streaks); opt-in, no paywall
+- Identity/Badge (Planned): optional profile badge, no PII
+
+## How Fantasy Flow Would Work (Planned)
+1) Pick squad (15 players, 100.0M cap); store lineup.
+2) Each GW: set XI + captain/vice; apply chips; lineup locks at first kickoff.
+3) Scoring: goals, assists, clean sheets, saves, bonus; negatives for cards/own goals; -4 per extra transfer.
+4) Settlement: backend ingests official stats, computes GW points, updates leagues.
+5) Rewards (planned): weekly winner badges/NFTs; optional on-chain proof; fantasy mode no staking required.
+
+## Backend Settlement & Refund Script (Owner)
+```bash
+cd backend
+OWNER_ADDRESS=0x575109e921c6d6a1cb7ca60be0191b10950afa6c \
+PRIVATE_KEY=<owner_key> \
+RPC_URL=<rpc> \
+PREDICTION_CONTRACT_ADDRESS=0xd3A3f2c96b8a5390D29893184cc236b2b5767e43 \
+RESULTS_CONSUMER_ADDRESS=0xA7C6A76A73Fe9CB5Bb508e0277e064678C2d6D8D \
+node scripts/settle-and-refund.js
+```
 
 ## 🔐 Security Notes
-
-- Never commit `.env` files (already in `.gitignore`)
-- Keep private keys secure
-- Use different keys for different environments
-- ResultsConsumer contract must be authorized in Chainlink Functions subscription
+- `.env` files are ignored (`backend/.env`, `client/.env`, `contracts/.env`).
+- Keep private keys out of the repo; use env vars.
+- If re-enabling Chainlink UI flows, ensure subscription/LINK funding and authorization.
 
 ## 📚 Documentation
-
-- **Chainlink Functions**: See `contracts/CHAINLINK_SETUP.md` for oracle setup
-- **Contracts**: See `contracts/README.md` for contract details
+- Chainlink setup: `contracts/CHAINLINK_SETUP.md`
+- Contracts: `contracts/README.md`
 
 ## 🤝 Contributing
-
-1. Fork the repository
+1. Fork the repo
 2. Create a feature branch
-3. Make your changes
-4. Submit a pull request
+3. Commit and push changes
+4. Open a PR
 
 ## 📄 License
-
 MIT
 
 ## 🙏 Acknowledgments
-
 - FPL API for match data
 - Base Foundation for testnet infrastructure
 - OpenZeppelin for secure contract libraries
-

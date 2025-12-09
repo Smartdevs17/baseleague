@@ -13,6 +13,10 @@ import Dashboard from "./pages/Dashboard";
 import CreateMatch from "./pages/CreateMatch";
 import MyMatches from "./pages/MyMatches";
 import Leaderboard from "./pages/Leaderboard";
+import Squad from "./pages/Squad";
+import Transfers from "./pages/Transfers";
+import Chips from "./pages/Chips";
+import MiniLeagues from "./pages/MiniLeagues";
 import Terms from "./pages/Terms";
 import Privacy from "./pages/Privacy";
 import Disclaimer from "./pages/Disclaimer";
@@ -36,6 +40,10 @@ const App = () => (
 								<Route path="/create" element={<CreateMatch />} />
 								<Route path="/my-matches" element={<MyMatches />} />
 								<Route path="/leaderboard" element={<Leaderboard />} />
+								<Route path="/squad" element={<Squad />} />
+								<Route path="/transfers" element={<Transfers />} />
+								<Route path="/chips" element={<Chips />} />
+								<Route path="/mini-leagues" element={<MiniLeagues />} />
 								<Route path="/terms" element={<Terms />} />
 								<Route path="/privacy" element={<Privacy />} />
 								<Route path="/disclaimer" element={<Disclaimer />} />
