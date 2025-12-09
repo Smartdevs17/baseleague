@@ -74,6 +74,14 @@ contract ResultsConsumer is FunctionsClient, ConfirmedOwner {
 		uint64 subscriptionId,
 		uint32 callbackGasLimit
 	);
+	event ResultManuallySet(
+		uint256 indexed gameweek,
+		uint256 indexed matchId,
+		uint8 homeScore,
+		uint8 awayScore,
+		string status,
+		address setBy
+	);
 
 	// Errors
 	error InvalidRequestId(bytes32 requestId);
@@ -83,16 +91,31 @@ contract ResultsConsumer is FunctionsClient, ConfirmedOwner {
 	error UnauthorizedCaller(address caller);
 	error InvalidGameweek();
 	error InvalidMatchId();
+	error ResultAlreadySet(uint256 gameweek, uint256 matchId);
+	error InvalidScore();
+	error InvalidStatus();
 
 	/**
 	 * @notice Constructor
 	 * @param router Chainlink Functions Router address for Base Sepolia Testnet
-	 * @param donId DON ID for the Functions DON on Base Sepolia
+	 * @param donIdString DON ID string for the Functions DON on Base Sepolia (e.g., "fun-base-sepolia-1")
+	 * @dev Converts the string DON ID to bytes32 internally for Chainlink compatibility
 	 */
 	constructor(
 		address router,
-		bytes32 donId
+		string memory donIdString
 	) FunctionsClient(router) ConfirmedOwner(msg.sender) {
+		// Convert string to bytes32 (pad with zeros)
+		bytes memory donIdBytes = bytes(donIdString);
+		bytes32 donId;
+		
+		// Copy bytes to bytes32, padding with zeros if needed
+		// Solidity automatically pads with zeros when converting bytes to bytes32
+		assembly {
+			// Load the first 32 bytes of the string (skip length prefix)
+			donId := mload(add(donIdBytes, 32))
+		}
+		
 		s_donId = donId;
 		s_callbackGasLimit = 300000; // Default gas limit
 		s_requestConfirmations = 3; // Default confirmations
@@ -210,8 +233,8 @@ contract ResultsConsumer is FunctionsClient, ConfirmedOwner {
 
 	/**
 	 * @notice Parse response from Chainlink Functions
-	 * @dev The JavaScript code returns ABI-encoded data: (uint8, uint8, string, uint256)
-	 * @param response Raw bytes response from Chainlink Functions
+	 * @dev The JavaScript code returns comma-separated string: "homeScore,awayScore,status,timestamp"
+	 * @param response Raw bytes response from Chainlink Functions (comma-separated string)
 	 * @return outcome Parsed MatchOutcome struct
 	 */
 	function _parseResponse(
@@ -227,39 +250,46 @@ contract ResultsConsumer is FunctionsClient, ConfirmedOwner {
 			});
 		}
 
-		// Decode ABI-encoded response
-		// Format: (uint8, uint8, string, uint256)
-		// Note: We'll decode directly - if it fails, the transaction will revert
-		// In production, you might want to add more robust error handling
-		if (response.length < 4) {
-			return MatchOutcome({
-				homeScore: 0,
-				awayScore: 0,
-				status: "",
-				timestamp: 0,
-				exists: false
-			});
+		// Parse comma-separated format: "homeScore,awayScore,status,timestamp"
+		uint8 homeScore = 0;
+		uint8 awayScore = 0;
+		string memory status = "";
+		uint256 timestamp = 0;
+
+		uint256 currentIndex = 0;
+		uint256 fieldIndex = 0; // 0=homeScore, 1=awayScore, 2=status, 3=timestamp
+		uint256 fieldStart = 0;
+
+		for (uint256 i = 0; i < response.length; i++) {
+			if (response[i] == 0x2C || i == response.length - 1) { // Comma or end
+				uint256 fieldEnd = (response[i] == 0x2C) ? i : response.length;
+				
+				if (fieldIndex == 0) {
+					// Parse homeScore
+					homeScore = _parseUint8FromBytes(response, fieldStart, fieldEnd);
+				} else if (fieldIndex == 1) {
+					// Parse awayScore
+					awayScore = _parseUint8FromBytes(response, fieldStart, fieldEnd);
+				} else if (fieldIndex == 2) {
+					// Parse status (string)
+					bytes memory statusBytes = new bytes(fieldEnd - fieldStart);
+					for (uint256 j = 0; j < fieldEnd - fieldStart; j++) {
+						statusBytes[j] = response[fieldStart + j];
+					}
+					status = string(statusBytes);
+				} else if (fieldIndex == 3) {
+					// Parse timestamp
+					timestamp = _parseUint256FromBytes(response, fieldStart, fieldEnd);
+				}
+
+				fieldIndex++;
+				fieldStart = i + 1;
+			}
 		}
 
-		(uint8 homeScore, uint8 awayScore, string memory status, uint256 timestamp) = abi.decode(
-			response,
-			(uint8, uint8, string, uint256)
-		);
-
-		// Validate decoded values
+		// Validate
 		bytes memory statusBytes = bytes(status);
-		if (statusBytes.length == 0 || statusBytes.length > 10) {
-			return MatchOutcome({
-				homeScore: homeScore,
-				awayScore: awayScore,
-				status: status,
-				timestamp: timestamp,
-				exists: false
-			});
-		}
-
-		// Result is valid if we have a timestamp
-		bool exists = timestamp > 0;
+		bool exists = timestamp > 0 && statusBytes.length > 0 && statusBytes.length <= 10;
 
 		return MatchOutcome({
 			homeScore: homeScore,
@@ -268,6 +298,42 @@ contract ResultsConsumer is FunctionsClient, ConfirmedOwner {
 			timestamp: timestamp,
 			exists: exists
 		});
+	}
+
+	/**
+	 * @notice Parse uint8 from bytes slice
+	 */
+	function _parseUint8FromBytes(
+		bytes memory data,
+		uint256 start,
+		uint256 end
+	) internal pure returns (uint8) {
+		uint256 value = 0;
+		for (uint256 i = start; i < end && i < data.length; i++) {
+			bytes1 char = data[i];
+			if (char >= 0x30 && char <= 0x39) {
+				value = value * 10 + (uint8(char) - 48);
+			}
+		}
+		return uint8(value);
+	}
+
+	/**
+	 * @notice Parse uint256 from bytes slice
+	 */
+	function _parseUint256FromBytes(
+		bytes memory data,
+		uint256 start,
+		uint256 end
+	) internal pure returns (uint256) {
+		uint256 value = 0;
+		for (uint256 i = start; i < end && i < data.length; i++) {
+			bytes1 char = data[i];
+			if (char >= 0x30 && char <= 0x39) {
+				value = value * 10 + (uint256(uint8(char)) - 48);
+			}
+		}
+		return value;
 	}
 
 	/**
@@ -333,19 +399,11 @@ contract ResultsConsumer is FunctionsClient, ConfirmedOwner {
 					"// Get timestamp",
 					"const timestamp = match.kickoff_time ? Math.floor(new Date(match.kickoff_time).getTime() / 1000) : Math.floor(Date.now() / 1000);",
 					"",
-					"// Return as ABI-encoded bytes",
-					"// Format: (uint8, uint8, string, uint256)",
-					"// Use Functions.encodeString for the string, then encode all together",
-					"const encodedStatus = Functions.encodeString(status);",
-					"",
-					"// For ABI encoding, we'll return a JSON string that can be decoded",
-					"// The contract will parse this",
-					"return Functions.encodeString(JSON.stringify({",
-					"  homeScore: homeScore,",
-					"  awayScore: awayScore,",
-					"  status: status,",
-					"  timestamp: timestamp",
-					"}));"
+					"// Return as comma-separated string (easier to parse in Solidity)",
+					"// Format: homeScore,awayScore,status,timestamp",
+					"// Example: 2,1,FT,1701234567",
+					"const resultString = homeScore + ',' + awayScore + ',' + status + ',' + timestamp;",
+					"return Functions.encodeString(resultString);"
 				)
 			);
 	}
@@ -438,6 +496,54 @@ contract ResultsConsumer is FunctionsClient, ConfirmedOwner {
 			s_subscriptionId,
 			s_callbackGasLimit
 		);
+	}
+
+	/**
+	 * @notice Manually set match result (owner only - fallback when Chainlink Functions fails)
+	 * @param gameweek The gameweek number
+	 * @param matchId The match ID within the gameweek
+	 * @param homeScore Home team score
+	 * @param awayScore Away team score
+	 * @param status Match status (e.g., "FT", "LIVE", "NS")
+	 * @dev This allows the owner to manually set results if Chainlink Functions fails
+	 *      Only owner can call this function for security
+	 */
+	function setResultManually(
+		uint256 gameweek,
+		uint256 matchId,
+		uint8 homeScore,
+		uint8 awayScore,
+		string memory status
+	) external onlyOwner {
+		// Validate inputs
+		if (gameweek == 0) {
+			revert InvalidGameweek();
+		}
+		if (matchId == 0) {
+			revert InvalidMatchId();
+		}
+
+		// Check if result already exists
+		if (gameOutcomes[gameweek][matchId].exists) {
+			revert ResultAlreadySet(gameweek, matchId);
+		}
+
+		// Validate status string length
+		bytes memory statusBytes = bytes(status);
+		if (statusBytes.length == 0 || statusBytes.length > 10) {
+			revert InvalidStatus();
+		}
+
+		// Set the outcome
+		gameOutcomes[gameweek][matchId] = MatchOutcome({
+			homeScore: homeScore,
+			awayScore: awayScore,
+			status: status,
+			timestamp: block.timestamp,
+			exists: true
+		});
+
+		emit ResultManuallySet(gameweek, matchId, homeScore, awayScore, status, msg.sender);
 	}
 
 	/**

@@ -10,6 +10,7 @@ import { Search, Plus, TrendingUp, Wallet, Home } from 'lucide-react';
 import { Match, PredictionType } from '@/types/match';
 import { toast } from 'sonner';
 import { useAccount } from 'wagmi';
+import { useResultsConsumer } from '@/hooks/useContracts';
 import { useEthBalance, usePredictionContract, useContractEvents } from '@/hooks/useContracts';
 import { useContractMatches } from '@/hooks/useContractMatches';
 import { Prediction } from '@/lib/contracts';
@@ -23,7 +24,11 @@ const Dashboard = () => {
   
   // Real contract hooks - using ETH instead of tokens
   const { balance, formatted: balanceFormatted, symbol } = useEthBalance();
-  const { placeBet, isPending: isPlacingBet, isConfirming, isConfirmed, hash: betTxHash } = usePredictionContract();
+  const { placeBet, settleMatch, isPending: isPlacingBet, isConfirming, isConfirmed, hash: betTxHash } = usePredictionContract();
+  
+  // Check if user is the ResultsConsumer owner (deployer)
+  // Deployer check removed from UI; backend handles settlement automatically now
+  const isDeployer = false;
   
   // Listen to contract events for new bets (triggers toasts)
   useContractEvents();
@@ -493,8 +498,10 @@ const Dashboard = () => {
                     <MatchCard
                       key={match.id}
                       match={match}
-                      showActions={false}
+                      onSettle={settleMatch}
+                      showActions={true}
                       currentUserAddress={address}
+                      isDeployer={isDeployer || false}
                     />
                   ))}
               </div>

@@ -44,6 +44,7 @@ BaseLeague is a Web3 fantasy football platform built on Base Sepolia Testnet tha
   - Groups bets into matches (same gameweek + matchId)
   - Settles matches based on results from ResultsConsumer (Chainlink Functions)
   - Distributes winnings to correct predictions
+  - Owner can refund unmatched single-sided bets in full (no platform fee) when a match never gets a second bettor
 
 ### Oracle Architecture
 

@@ -2,7 +2,7 @@ import { Match } from '@/types/match';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Trophy, Users, Clock, CheckCircle2 } from 'lucide-react';
+import { Trophy, Users, Clock, CheckCircle2, Gavel } from 'lucide-react';
 import { formatEther } from 'viem';
 import { formatEthDisplay } from '@/utils/formatEth';
 
@@ -10,14 +10,19 @@ interface MatchCardProps {
   match: Match;
   onJoin?: (matchId: string) => void;
   onView?: (matchId: string) => void;
+  onSettle?: (gameweek: number, matchId: number) => void;
   showActions?: boolean;
   currentUserAddress?: string; // Optional: current user's address to check if they're the creator
+  isDeployer?: boolean; // Whether current user is the contract deployer/owner
 }
 
-const MatchCard = ({ match, onJoin, onView, showActions = true, currentUserAddress }: MatchCardProps) => {
+const MatchCard = ({ match, onJoin, onView, onSettle, showActions = true, currentUserAddress, isDeployer = false }: MatchCardProps) => {
   // Check if current user is the creator
   const isCreator = currentUserAddress && match.creator.toLowerCase() === currentUserAddress.toLowerCase();
   const getStatusBadge = () => {
+    if (match.awaitingSettlement) {
+      return <Badge className="bg-yellow-500/20 text-yellow-500 border-yellow-500/30">Awaiting Settlement</Badge>;
+    }
     switch (match.status) {
       case 'open':
         return <Badge className="bg-primary/20 text-primary border-primary/30">Open</Badge>;
@@ -163,11 +168,19 @@ const MatchCard = ({ match, onJoin, onView, showActions = true, currentUserAddre
         </div>
 
         {/* Winner Display */}
-        {match.settled && match.winner && (
+        {(match.settled && match.winner) && (
           <div className="flex items-center gap-2 p-3 bg-success/10 border border-success/30 rounded-lg">
             <CheckCircle2 className="w-5 h-5 text-success" />
             <span className="text-sm font-medium text-success">
               Winner: {match.winner.slice(0, 6)}...{match.winner.slice(-4)}
+            </span>
+          </div>
+        )}
+        {!match.settled && match.awaitingSettlement && (
+          <div className="flex items-center gap-2 p-3 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
+            <Clock className="w-5 h-5 text-yellow-500" />
+            <span className="text-sm font-medium text-yellow-600">
+              Result fetched — settlement required to pay out.
             </span>
           </div>
         )}
@@ -194,6 +207,22 @@ const MatchCard = ({ match, onJoin, onView, showActions = true, currentUserAddre
                   </Button>
                 )}
               </>
+            )}
+            {(match.status === 'active' || match.awaitingSettlement) && isDeployer && onSettle && (
+              <Button
+                onClick={() => {
+                  // Extract gameweek and matchId from match.id (format: "gameweek-matchId")
+                  const [gameweek, matchId] = match.id.split('-').map(Number)
+                  if (gameweek && matchId) {
+                    onSettle(gameweek, matchId)
+                  }
+                }}
+                variant="outline"
+                className="flex-1 border-warning text-warning hover:bg-warning/10"
+              >
+                <Gavel className="w-4 h-4 mr-2" />
+                Settle Match
+              </Button>
             )}
             {onView && (
               <Button

@@ -55,32 +55,15 @@ async function main() {
 		)
 	}
 
-	// Convert DON ID string to bytes32
-	// DON ID can be a string like "fun-celo-alfajores-1" or a hex string
-	let donId: string
-	if (donIdString.startsWith('0x')) {
-		// Already a hex string
-		donId = donIdString
-	} else {
-		// Convert string to bytes32 (pad with zeros)
-		// First encode the string to bytes, then pad to 32 bytes
-		const donIdBytes = ethers.toUtf8Bytes(donIdString)
-		// Pad to 32 bytes
-		const padded = new Uint8Array(32)
-		padded.set(donIdBytes)
-		donId = ethers.hexlify(padded)
-	}
-
 	console.log('Configuration:')
 	console.log('  Functions Router:', functionsRouter)
 	console.log('  DON ID (string):', donIdString)
-	console.log('  DON ID (bytes32):', donId)
 	console.log('')
 
-	// Deploy ResultsConsumer
+	// Deploy ResultsConsumer (now accepts string directly)
 	console.log('📦 Deploying ResultsConsumer...')
 	const ResultsConsumer = await ethers.getContractFactory('ResultsConsumer')
-	const resultsConsumer = await ResultsConsumer.deploy(functionsRouter, donId)
+	const resultsConsumer = await ResultsConsumer.deploy(functionsRouter, donIdString)
 	await resultsConsumer.waitForDeployment()
 	const resultsConsumerAddress = await resultsConsumer.getAddress()
 	console.log('✅ ResultsConsumer deployed to:', resultsConsumerAddress)

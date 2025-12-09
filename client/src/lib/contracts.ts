@@ -1,19 +1,19 @@
-import ResultsConsumerABI from '@/contracts/ResultsConsumer.abi.json'
-import PredictionContractABI from '@/contracts/PredictionContract.abi.json'
+import ResultsConsumerArtifact from '@/contracts/ResultsConsumer.abi.json'
+import PredictionContractArtifact from '@/contracts/PredictionContract.abi.json'
 import TokenABI from '@/contracts/token.json'
 import { config } from './config'
 
 // Contract addresses
 export const CONTRACTS = {
-	RESULTS_CONSUMER: (config.contracts.resultsConsumer as `0x${string}`) || '0xaF404EA0C622c1bcd7ddca1DC866Ad2eAe248592', // Chainlink ResultsConsumer
-	PREDICTION_CONTRACT: (config.contracts.predictionContract as `0x${string}`) || '0xF6Ee0a3a8Ea1fE73D0DFfac8419bF676276D56cB',
+	RESULTS_CONSUMER: (config.contracts.resultsConsumer as `0x${string}`) || '0x5D8F251D046819757054673CA6bB143f36B389FF', // Chainlink ResultsConsumer
+	PREDICTION_CONTRACT: (config.contracts.predictionContract as `0x${string}`) || '0x3bf17469296eE3dADE758cD2F82F76f76EF14d40',
 	BLEAG_TOKEN: (config.contracts.bleagToken as `0x${string}`) || '0x1234567890123456789012345678901234567890',
 } as const
 
-// Contract ABIs
+// Contract ABIs - extract the 'abi' property from Hardhat artifacts
 export const ABIS = {
-	RESULTS_CONSUMER: ResultsConsumerABI,
-	PREDICTION_CONTRACT: PredictionContractABI,
+	RESULTS_CONSUMER: (ResultsConsumerArtifact as any).abi || ResultsConsumerArtifact,
+	PREDICTION_CONTRACT: (PredictionContractArtifact as any).abi || PredictionContractArtifact,
 	BLEAG_TOKEN: TokenABI,
 } as const
 

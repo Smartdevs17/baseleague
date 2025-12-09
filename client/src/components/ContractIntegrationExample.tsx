@@ -1,13 +1,12 @@
 import React, { useState } from 'react'
 import { useAccount } from 'wagmi'
-import { useResultsConsumer, usePredictionContract, useEthBalance } from '@/hooks/useContracts'
+import { usePredictionContract, useEthBalance } from '@/hooks/useContracts'
 import { Prediction, getPredictionLabel } from '@/lib/contracts'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Badge } from '@/components/ui/badge'
 import { toast } from 'sonner'
 import { formatEther, parseEther } from 'viem'
 
@@ -21,7 +20,6 @@ import { formatEther, parseEther } from 'viem'
  */
 export const ContractIntegrationExample = () => {
 	const { address, isConnected } = useAccount()
-	const { requestResult, getOutcome, isPending: isRequesting } = useResultsConsumer()
 	const { placeBet, isPending: isPlacingBet } = usePredictionContract()
 	const { balance, formatted: balanceFormatted, symbol } = useEthBalance()
 
@@ -29,24 +27,6 @@ export const ContractIntegrationExample = () => {
 	const [matchId, setMatchId] = useState<string>('1')
 	const [betAmount, setBetAmount] = useState<string>('10')
 	const [prediction, setPrediction] = useState<Prediction>(Prediction.HOME_WIN)
-
-	// Get match outcome
-	const outcomeQuery = getOutcome(parseInt(gameweek), parseInt(matchId))
-	const hasOutcome = outcomeQuery.data?.exists || false
-
-	const handleRequestResult = async () => {
-		if (!isConnected) {
-			toast.error('Please connect your wallet')
-			return
-		}
-
-		try {
-			await requestResult(parseInt(gameweek), parseInt(matchId))
-		} catch (error) {
-			console.error('Failed to request result:', error)
-		}
-	}
-
 
 	const handlePlaceBet = async () => {
 		if (!isConnected) {
@@ -105,72 +85,12 @@ export const ContractIntegrationExample = () => {
 				</CardContent>
 			</Card>
 
-			{/* Request Match Result */}
 			<Card>
 				<CardHeader>
-					<CardTitle>Request Match Result</CardTitle>
-					<CardDescription>
-						Request match result from Chainlink Functions (FPL API)
-					</CardDescription>
+					<CardTitle>Results</CardTitle>
+					<CardDescription>Results are fetched and settled by the backend; no on-chain request needed.</CardDescription>
 				</CardHeader>
-				<CardContent className="space-y-4">
-					<div className="grid grid-cols-2 gap-4">
-						<div>
-							<Label htmlFor="gameweek">Gameweek</Label>
-							<Input
-								id="gameweek"
-								type="number"
-								value={gameweek}
-								onChange={(e) => setGameweek(e.target.value)}
-								placeholder="1"
-							/>
-						</div>
-						<div>
-							<Label htmlFor="matchId">Match ID</Label>
-							<Input
-								id="matchId"
-								type="number"
-								value={matchId}
-								onChange={(e) => setMatchId(e.target.value)}
-								placeholder="1"
-							/>
-						</div>
-					</div>
-					<Button
-						onClick={handleRequestResult}
-						disabled={isRequesting}
-						className="w-full"
-					>
-						{isRequesting ? 'Requesting...' : 'Request Result'}
-					</Button>
-				</CardContent>
 			</Card>
-
-			{/* Match Outcome */}
-			{hasOutcome && outcomeQuery.data && (
-				<Card>
-					<CardHeader>
-						<CardTitle>Match Result</CardTitle>
-						<CardDescription>Result from Chainlink Functions</CardDescription>
-					</CardHeader>
-					<CardContent>
-						<div className="space-y-2">
-							<div className="flex justify-between">
-								<span>Home Score:</span>
-								<Badge variant="outline">{outcomeQuery.data.homeScore.toString()}</Badge>
-							</div>
-							<div className="flex justify-between">
-								<span>Away Score:</span>
-								<Badge variant="outline">{outcomeQuery.data.awayScore.toString()}</Badge>
-							</div>
-							<div className="flex justify-between">
-								<span>Status:</span>
-								<Badge>{outcomeQuery.data.status}</Badge>
-							</div>
-						</div>
-					</CardContent>
-				</Card>
-			)}
 
 			{/* Place Bet */}
 			<Card>

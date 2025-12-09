@@ -35,6 +35,24 @@ interface MatchData {
 	awayBets: BetData[]
 }
 
+// Active matches that are older than this window (from kickoff) will be hidden
+const STALE_ACTIVE_CUTOFF_HOURS = 48
+// Open matches expire after this window past kickoff and should be hidden from UI
+const OPEN_MATCH_EXPIRY_HOURS = 4
+
+const isFixtureStale = (fixture: ApiFixture | null, createdAtSeconds: number) => {
+	const kickoffMs = fixture?.kickoffTime
+		? new Date(fixture.kickoffTime).getTime()
+		: createdAtSeconds > 0
+			? createdAtSeconds * 1000
+			: 0
+
+	if (!kickoffMs || Number.isNaN(kickoffMs)) return false
+
+	const elapsedHours = (Date.now() - kickoffMs) / (1000 * 60 * 60)
+	return elapsedHours > STALE_ACTIVE_CUTOFF_HOURS
+}
+
 /**
  * Fetch all bets and group them by match
  */
@@ -260,6 +278,19 @@ export const useContractMatches = () => {
 					bettor: m.bets[0]?.bettor,
 				})
 
+				const createdAtSeconds = Number(m.bets[0]?.timestamp || 0n)
+				const kickoffMs = fixture?.kickoffTime ? new Date(fixture.kickoffTime).getTime() : createdAtSeconds * 1000
+				const expired =
+					!!kickoffMs &&
+					!Number.isNaN(kickoffMs) &&
+					(Date.now() - kickoffMs) / (1000 * 60 * 60) > OPEN_MATCH_EXPIRY_HOURS
+
+				// Hide expired open matches from UI; they will be handled/refunded via contract/backend
+				if (expired) {
+					console.warn(`⚠️ [useContractMatches] Hiding expired open match ${m.gameweek}-${m.matchId}`)
+					return null
+				}
+
 				return {
 					id: `${m.gameweek}-${m.matchId}`,
 					creator: m.bets[0]?.bettor || '0x0',
@@ -272,6 +303,7 @@ export const useContractMatches = () => {
 					createdAt: Number(m.bets[0]?.timestamp || 0n),
 				} as Match
 			})
+			.filter((m): m is Match => m !== null)
 		
 		// Debug: Log final open matches with predictions
 		if (open.length > 0) {
@@ -294,6 +326,15 @@ export const useContractMatches = () => {
 			.filter((m) => !m.isSettled && m.bets.length > 1)
 			.map((m) => {
 				const fixture = findFixture(m.matchId)
+				const createdAtSeconds = Number(m.bets[0]?.timestamp || 0n)
+				const fixtureFinished = fixture?.status === 'finished'
+				const stale = isFixtureStale(fixture, createdAtSeconds)
+
+				// If the underlying fixture is over (or stale), keep it out of Active
+				if (fixtureFinished || stale) {
+					console.warn(`⚠️ [useContractMatches] Skipping stale active match ${m.gameweek}-${m.matchId} (finished: ${fixtureFinished}, stale: ${stale})`)
+					return null
+				}
 				
 				const fixtureData = fixture ? {
 					id: parseInt(fixture.externalId || fixture.id),
@@ -332,10 +373,12 @@ export const useContractMatches = () => {
 					creatorPrediction,
 					joinerPrediction,
 					settled: false,
+					awaitingSettlement: false,
 					status: 'active' as const,
 					createdAt: Number(m.bets[0]?.timestamp || 0n),
 				} as Match
 			})
+			.filter((m): m is Match => m !== null)
 			// Filter out matches where creator and joiner are the same address
 			.filter((m) => {
 				if (!m.joiner) return true
@@ -347,13 +390,21 @@ export const useContractMatches = () => {
 			})
 		
 		return active
-	}, [matches, fixtures, getTeamLogo])
+	}, [matches, fixtures, getTeamLogo, findFixture])
 
 	const completedMatches = useMemo(() => {
 		return matches
-			.filter((m) => m.isSettled)
 			.map((m) => {
 				const fixture = findFixture(m.matchId)
+				const createdAtSeconds = Number(m.bets[0]?.timestamp || 0n)
+				const fixtureFinished = fixture?.status === 'finished'
+				const stale = isFixtureStale(fixture, createdAtSeconds)
+				const awaitingSettlement = !m.isSettled && (fixtureFinished || stale)
+				const settled = m.isSettled
+
+				// Only treat as completed if settled, finished, or stale
+				if (!settled && !fixtureFinished && !stale) return null
+
 				const winnerBet = m.bets.find((b) => b.isWinner)
 				
 				const fixtureData = fixture ? {
@@ -391,13 +442,15 @@ export const useContractMatches = () => {
 					joinerPrediction: m.bets.length > 1 
 						? (m.bets[1]?.prediction === 0n ? 'home' : m.bets[1]?.prediction === 1n ? 'draw' : 'away')
 						: undefined,
-					settled: true,
+					settled,
+					awaitingSettlement,
 					winner: winnerBet?.bettor,
 					status: 'completed' as const,
 					createdAt: Number(m.bets[0]?.timestamp || 0n),
 				} as Match
 			})
-	}, [matches, fixtures, getTeamLogo])
+			.filter((m): m is Match => m !== null)
+	}, [matches, fixtures, getTeamLogo, findFixture])
 
 	return {
 		openMatches,

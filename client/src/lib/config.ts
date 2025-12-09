@@ -18,10 +18,10 @@ export const config = {
   // Smart contracts
   contracts: {
     bleagToken: import.meta.env.VITE_BLEAG_TOKEN_ADDRESS || '0x1234567890123456789012345678901234567890',
-    resultsConsumer: import.meta.env.VITE_RESULTS_CONSUMER_ADDRESS || '0xaF404EA0C622c1bcd7ddca1DC866Ad2eAe248592', // Chainlink ResultsConsumer
-    predictionContract: import.meta.env.VITE_PREDICTION_CONTRACT_ADDRESS || '0xF6Ee0a3a8Ea1fE73D0DFfac8419bF676276D56cB',
+    resultsConsumer: import.meta.env.VITE_RESULTS_CONSUMER_ADDRESS || '0x5D8F251D046819757054673CA6bB143f36B389FF', // Chainlink ResultsConsumer
+    predictionContract: import.meta.env.VITE_PREDICTION_CONTRACT_ADDRESS || '0x3bf17469296eE3dADE758cD2F82F76f76EF14d40',
     // Legacy support
-    matchManager: import.meta.env.VITE_MATCH_MANAGER_ADDRESS || import.meta.env.VITE_PREDICTION_CONTRACT_ADDRESS || '0xF6Ee0a3a8Ea1fE73D0DFfac8419bF676276D56cB',
+    matchManager: import.meta.env.VITE_MATCH_MANAGER_ADDRESS || import.meta.env.VITE_PREDICTION_CONTRACT_ADDRESS || '0x3bf17469296eE3dADE758cD2F82F76f76EF14d40',
   },
 
   // API configuration

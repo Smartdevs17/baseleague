@@ -10,6 +10,7 @@ import "./ResultsConsumer.sol";
  */
 contract PredictionContract {
 	ResultsConsumer public immutable resultsConsumer;
+	address public owner;
 
 	// Bet structure
 	struct Bet {
@@ -71,6 +72,11 @@ contract PredictionContract {
 	error MatchAlreadySettled(uint256 gameweek, uint256 matchId);
 	error InvalidAmount();
 	error InvalidPrediction();
+	error NotOwner();
+	error InsufficientBalance(uint256 requested, uint256 available);
+	error WithdrawalFailed();
+	error NoUnmatchedBet(uint256 gameweek, uint256 matchId);
+	error MultipleBetsForMatch(uint256 gameweek, uint256 matchId, uint256 count);
 
 	/**
 	 * @notice Constructor
@@ -78,6 +84,28 @@ contract PredictionContract {
 	 */
 	constructor(address _resultsConsumer) {
 		resultsConsumer = ResultsConsumer(_resultsConsumer);
+		owner = msg.sender;
+	}
+
+	/**
+	 * @notice Modifier to restrict access to owner only
+	 */
+	modifier onlyOwner() {
+		if (msg.sender != owner) {
+			revert NotOwner();
+		}
+		_;
+	}
+
+	/**
+	 * @notice Transfer ownership to a new address
+	 * @param newOwner The new owner address
+	 */
+	function transferOwnership(address newOwner) external onlyOwner {
+		if (newOwner == address(0)) {
+			revert InvalidBet(); // Reuse error for invalid address
+		}
+		owner = newOwner;
 	}
 
 	/**
@@ -255,6 +283,95 @@ contract PredictionContract {
 	 */
 	function getBalance() external view returns (uint256) {
 		return address(this).balance;
+	}
+
+	/**
+	 * @notice Withdraw platform fees (owner only)
+	 * @param amount The amount to withdraw in wei. Use 0 to withdraw all available balance.
+	 * @dev Allows owner to withdraw accumulated platform fees or any remaining balance
+	 */
+	function withdrawFees(uint256 amount) external onlyOwner {
+		uint256 balance = address(this).balance;
+		
+		// If amount is 0, withdraw all
+		uint256 withdrawAmount = amount == 0 ? balance : amount;
+		
+		if (withdrawAmount == 0) {
+			revert InvalidAmount();
+		}
+		
+		if (withdrawAmount > balance) {
+			revert InsufficientBalance(withdrawAmount, balance);
+		}
+
+		(bool success, ) = payable(owner).call{value: withdrawAmount}("");
+		if (!success) {
+			revert WithdrawalFailed();
+		}
+
+		emit FeesWithdrawn(owner, withdrawAmount, balance - withdrawAmount);
+	}
+
+	// Events
+	event FeesWithdrawn(
+		address indexed recipient,
+		uint256 amount,
+		uint256 remainingBalance
+	);
+
+	event UnmatchedBetRefunded(
+		uint256 indexed gameweek,
+		uint256 indexed matchId,
+		address indexed bettor,
+		uint256 amount
+	);
+
+	/**
+	 * @notice Refund an unmatched single bet (owner only). No platform fee retained.
+	 * @dev Marks the bet settled and refunds the full stake. Intended for matches that never got a second bettor.
+	 */
+	function refundUnmatchedBet(
+		uint256 gameweek,
+		uint256 matchId
+	) external onlyOwner {
+		if (settledMatches[gameweek][matchId]) {
+			revert MatchAlreadySettled(gameweek, matchId);
+		}
+
+		uint256 candidateBetId = 0;
+		uint256 count = 0;
+
+		for (uint256 i = 0; i < nextBetId; i++) {
+			Bet storage bet = bets[i];
+			if (
+				!bet.isSettled &&
+				bet.gameweek == gameweek &&
+				bet.matchId == matchId
+			) {
+				candidateBetId = i;
+				count++;
+				if (count > 1) {
+					revert MultipleBetsForMatch(gameweek, matchId, count);
+				}
+			}
+		}
+
+		if (count == 0) {
+			revert NoUnmatchedBet(gameweek, matchId);
+		}
+
+		Bet storage target = bets[candidateBetId];
+		target.isSettled = true;
+		target.isWinner = false;
+		settledMatches[gameweek][matchId] = true;
+
+		(bool success, ) = payable(target.bettor).call{value: target.amount}("");
+		if (!success) {
+			revert WithdrawalFailed();
+		}
+
+		emit BetSettled(candidateBetId, target.bettor, false, target.amount);
+		emit UnmatchedBetRefunded(gameweek, matchId, target.bettor, target.amount);
 	}
 }
 

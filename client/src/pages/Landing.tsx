@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAccount } from '@/hooks/useMockData';
+import { useUpcomingFixtures } from '@/hooks/useFixtures';
 import { useTeamLogos } from '@/hooks/useTeamLogos';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -24,12 +25,77 @@ import {
 
 const Landing = () => {
   const navigate = useNavigate();
-  const { isConnected } = useAccount();
-  const { getTeamLogo } = useTeamLogos();
-  
-  // Arsenal and Chelsea team IDs from API-Football
-  const arsenalLogo = getTeamLogo('42', 'Arsenal');
-  const chelseaLogo = getTeamLogo('49', 'Chelsea');
+  const { isConnected } = useAccount()
+  const { getTeamLogo } = useTeamLogos()
+  const { fixtures: upcomingFixtures, loading } = useUpcomingFixtures()
+
+  // Pick a "featured" upcoming match for the hero card
+  const featuredMatch = useMemo(() => {
+    if (!upcomingFixtures || upcomingFixtures.length === 0) {
+      return null
+    }
+
+    // List of popular teams to prioritize in the hero section
+    const popularTeams = [
+      'Arsenal',
+      'Chelsea',
+      'Liverpool',
+      'Manchester City',
+      'Man City',
+      'Manchester United',
+      'Man Utd',
+      'Tottenham',
+      'Spurs',
+      'Newcastle',
+    ].map(name => name.toLowerCase())
+
+    // Sort by kickoff time (soonest first)
+    const sorted = [...upcomingFixtures].sort((a, b) => {
+      const aTime = new Date(a.kickoffTime).getTime()
+      const bTime = new Date(b.kickoffTime).getTime()
+      return aTime - bTime
+    })
+
+    // Try to find a match that includes at least one popular team
+    const popularMatch = sorted.find(fixture => {
+      const home = fixture.homeTeam.toLowerCase()
+      const away = fixture.awayTeam.toLowerCase()
+      return popularTeams.some(team =>
+        home.includes(team) || away.includes(team)
+      )
+    })
+
+    const match = popularMatch || sorted[0]
+
+    if (match) {
+      console.log('⚽ Featured hero match:', {
+        id: match.id,
+        homeTeam: match.homeTeam,
+        awayTeam: match.awayTeam,
+        homeTeamId: match.homeTeamId,
+        awayTeamId: match.awayTeamId,
+        kickoffTime: match.kickoffTime,
+      })
+    }
+
+    return match
+  }, [upcomingFixtures])
+
+  // Use real upcoming match when available, otherwise fall back to a static big game
+  const showPlaceholder = loading && !featuredMatch
+
+  const heroHomeTeam = showPlaceholder ? 'Loading...' : (featuredMatch ? featuredMatch.homeTeam : 'Arsenal')
+  const heroAwayTeam = showPlaceholder ? 'Loading...' : (featuredMatch ? featuredMatch.awayTeam : 'Chelsea')
+  const heroHomeTeamId = featuredMatch ? (featuredMatch.homeTeamId || '1') : '1' // Arsenal
+  const heroAwayTeamId = featuredMatch ? (featuredMatch.awayTeamId || '7') : '7' // Chelsea
+
+  const featuredHomeLogo = getTeamLogo(heroHomeTeamId, heroHomeTeam)
+  const featuredAwayLogo = getTeamLogo(heroAwayTeamId, heroAwayTeam)
+
+  const featuredKickoff =
+    featuredMatch && featuredMatch.kickoffTime
+      ? new Date(featuredMatch.kickoffTime)
+      : null
 
   const features = [
     {
@@ -116,7 +182,7 @@ const Landing = () => {
                 onClick={() => navigate('/app')}
                 className="bg-primary text-primary-foreground hover:bg-primary/90"
               >
-                {isConnected ? 'Enter App' : 'Get Started'}
+                Place Bet
               </Button>
             </div>
           </div>
@@ -177,78 +243,138 @@ const Landing = () => {
               <div className="relative z-10 bg-card border border-border rounded-2xl p-8 shadow-2xl">
                 <div className="space-y-6">
                   <div className="flex items-center justify-between">
-                    <h3 className="text-lg font-semibold">Live Match</h3>
-                    <Badge variant="destructive">LIVE</Badge>
+                    <h3 className="text-lg font-semibold">
+                      {showPlaceholder ? 'Loading Featured Match' : featuredMatch ? 'Featured Match' : 'Live Match'}
+                    </h3>
+                    <Badge variant={showPlaceholder ? 'secondary' : featuredMatch ? 'default' : 'destructive'}>
+                      {showPlaceholder ? 'LOADING' : featuredMatch ? 'UPCOMING' : 'LIVE'}
+                    </Badge>
                   </div>
                   
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-3">
                         <div className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center overflow-hidden">
-                          <img
-                            src={arsenalLogo}
-                            alt="Arsenal"
-                            className="w-8 h-8 object-contain"
-                            onError={(e) => {
-                              const target = e.target as HTMLImageElement;
-                              target.style.display = 'none';
-                              if (!target.parentElement?.querySelector('.fallback')) {
-                                const fallback = document.createElement('div');
-                                fallback.className = 'fallback w-8 h-8 flex items-center justify-center text-xs font-bold text-primary';
-                                fallback.textContent = 'A';
-                                target.parentElement?.appendChild(fallback);
-                              }
-                            }}
-                          />
+                          {showPlaceholder ? (
+                            <div className="w-8 h-8 bg-muted animate-pulse rounded-full" />
+                          ) : featuredHomeLogo ? (
+                            <img
+                              src={featuredHomeLogo}
+                              alt={featuredMatch?.homeTeam || 'Home team'}
+                              className="w-8 h-8 object-contain"
+                              onError={(e) => {
+                                const target = e.target as HTMLImageElement;
+                                target.style.display = 'none';
+                                if (!target.parentElement?.querySelector('.fallback')) {
+                                  const fallback = document.createElement('div');
+                                  fallback.className = 'fallback w-8 h-8 flex items-center justify-center text-xs font-bold text-primary';
+                                  const initial = (featuredMatch?.homeTeam || '?')
+                                    .substring(0, 1)
+                                    .toUpperCase();
+                                  fallback.textContent = initial;
+                                  target.parentElement?.appendChild(fallback);
+                                }
+                              }}
+                            />
+                          ) : (
+                            <div className="fallback w-8 h-8 flex items-center justify-center text-xs font-bold text-primary">
+                              {(featuredMatch?.homeTeam || '?')
+                                .substring(0, 1)
+                                .toUpperCase()}
+                            </div>
+                          )}
                         </div>
-                        <span className="font-medium">Arsenal</span>
+                        <span className="font-medium">
+                          {showPlaceholder ? 'Loading...' : featuredMatch ? featuredMatch.homeTeam : 'Arsenal'}
+                        </span>
                       </div>
                       <div className="text-center">
-                        <div className="text-2xl font-bold">2</div>
-                        <div className="text-xs text-muted-foreground">vs</div>
+                        <div className="text-xs text-muted-foreground">
+                          {showPlaceholder
+                            ? 'Fetching schedule...'
+                            : featuredKickoff
+                              ? featuredKickoff.toLocaleString(undefined, {
+                                  weekday: 'short',
+                                  hour: '2-digit',
+                                  minute: '2-digit',
+                                })
+                              : 'Kickoff TBA'}
+                        </div>
+                        <div className="text-xs text-muted-foreground mt-1">
+                          vs
+                        </div>
                       </div>
                       <div className="flex items-center space-x-3">
-                        <span className="font-medium">Chelsea</span>
+                        <span className="font-medium">
+                          {showPlaceholder ? 'Loading...' : featuredMatch ? featuredMatch.awayTeam : 'Chelsea'}
+                        </span>
                         <div className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center overflow-hidden">
-                          <img
-                            src={chelseaLogo}
-                            alt="Chelsea"
-                            className="w-8 h-8 object-contain"
-                            onError={(e) => {
-                              const target = e.target as HTMLImageElement;
-                              target.style.display = 'none';
-                              if (!target.parentElement?.querySelector('.fallback')) {
-                                const fallback = document.createElement('div');
-                                fallback.className = 'fallback w-8 h-8 flex items-center justify-center text-xs font-bold text-primary';
-                                fallback.textContent = 'C';
-                                target.parentElement?.appendChild(fallback);
-                              }
-                            }}
-                          />
+                          {showPlaceholder ? (
+                            <div className="w-8 h-8 bg-muted animate-pulse rounded-full" />
+                          ) : featuredAwayLogo ? (
+                            <img
+                              src={featuredAwayLogo}
+                              alt={featuredMatch?.awayTeam || 'Away team'}
+                              className="w-8 h-8 object-contain"
+                              onError={(e) => {
+                                const target = e.target as HTMLImageElement;
+                                target.style.display = 'none';
+                                if (!target.parentElement?.querySelector('.fallback')) {
+                                  const fallback = document.createElement('div');
+                                  fallback.className = 'fallback w-8 h-8 flex items-center justify-center text-xs font-bold text-primary';
+                                  const initial = (featuredMatch?.awayTeam || '?')
+                                    .substring(0, 1)
+                                    .toUpperCase();
+                                  fallback.textContent = initial;
+                                  target.parentElement?.appendChild(fallback);
+                                }
+                              }}
+                            />
+                          ) : (
+                            <div className="fallback w-8 h-8 flex items-center justify-center text-xs font-bold text-primary">
+                              {(featuredMatch?.awayTeam || '?')
+                                .substring(0, 1)
+                                .toUpperCase()}
+                            </div>
+                          )}
                         </div>
                       </div>
                     </div>
 
-                    <div className="space-y-2">
-                      <div className="flex justify-between text-sm">
-                        <span>Home Win</span>
-                        <span className="font-medium">2.1x</span>
+                    {featuredMatch && !showPlaceholder && (
+                      <div className="space-y-1 text-xs text-muted-foreground">
+                        <div>
+                          Gameweek {featuredMatch.gameweek} · Premier League
+                        </div>
+                        {featuredKickoff && (
+                          <div>
+                            Kickoff:{' '}
+                            {featuredKickoff.toLocaleString(undefined, {
+                              weekday: 'short',
+                              month: 'short',
+                              day: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit',
+                            })}
+                          </div>
+                        )}
+                        <div>
+                          Status:{' '}
+                          {featuredMatch.status === 'live'
+                            ? 'Live'
+                            : featuredMatch.status === 'finished'
+                            ? 'Finished'
+                            : 'Not started'}
+                        </div>
                       </div>
-                      <div className="flex justify-between text-sm">
-                        <span>Draw</span>
-                        <span className="font-medium">3.2x</span>
-                      </div>
-                      <div className="flex justify-between text-sm">
-                        <span>Away Win</span>
-                        <span className="font-medium">2.8x</span>
-                      </div>
-                    </div>
+                    )}
 
                     <Button 
                       className="w-full" 
-                      onClick={() => navigate('/app')}
+                      onClick={() => navigate('/create')}
+                      disabled={loading}
                     >
-                      {isConnected ? 'Place Bet' : 'Get Started to Bet'}
+                      {loading ? 'Loading Matches...' : 'Place Bet'}
                     </Button>
                   </div>
                 </div>

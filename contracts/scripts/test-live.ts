@@ -4,7 +4,7 @@ import * as dotenv from 'dotenv'
 dotenv.config()
 
 async function main() {
-	console.log('🧪 Testing Live Contracts on Celo Sepolia...\n')
+	console.log('🧪 Testing Live Contracts on Base Sepolia...\n')
 
 	// Get network configuration
 	const network = await ethers.provider.getNetwork()
@@ -27,7 +27,17 @@ async function main() {
 	const signers = await ethers.getSigners()
 	const owner = signers[0]
 	const bettor1 = signers[1] || owner
-	const bettor2 = signers[2] || owner
+
+	// Allow overriding bettor2 via env (private key)
+	const provider = ethers.provider
+	const bettor2EnvKey = process.env.BETTOR2_PRIVATE_KEY
+	const bettor2DesiredAddress = process.env.BETTOR2_ADDRESS
+	const bettor2Wallet = bettor2EnvKey ? new ethers.Wallet(bettor2EnvKey, provider) : null
+	const bettor2 = bettor2Wallet || signers[2] || owner
+
+	if (bettor2DesiredAddress && bettor2.address.toLowerCase() !== bettor2DesiredAddress.toLowerCase()) {
+		console.warn(`⚠️ Bettor2 address mismatch. Using ${bettor2.address}, desired ${bettor2DesiredAddress}. Provide BETTOR2_PRIVATE_KEY matching desired address.`)
+	}
 	console.log('Test Accounts:')
 	console.log('  Owner:', owner.address)
 	console.log('  Bettor 1:', bettor1.address)
@@ -63,19 +73,19 @@ async function main() {
 	const ownerBalance = await ethers.provider.getBalance(owner.address)
 	const bettor1Balance = await ethers.provider.getBalance(bettor1.address)
 	const bettor2Balance = await ethers.provider.getBalance(bettor2.address)
-	console.log('  Owner balance:', ethers.formatEther(ownerBalance), 'CELO')
-	console.log('  Bettor 1 balance:', ethers.formatEther(bettor1Balance), 'CELO')
-	console.log('  Bettor 2 balance:', ethers.formatEther(bettor2Balance), 'CELO')
+	console.log('  Owner balance:', ethers.formatEther(ownerBalance), 'ETH')
+	console.log('  Bettor 1 balance:', ethers.formatEther(bettor1Balance), 'ETH')
+	console.log('  Bettor 2 balance:', ethers.formatEther(bettor2Balance), 'ETH')
 	console.log('✅ Balance check complete\n')
 
 	// Test 3: Place bets (if we have enough balance)
 	console.log('🎲 Test 3: Placing Test Bets')
 	console.log('─'.repeat(50))
-	const betAmount = ethers.parseEther('0.01') // Small amount for testing
+	const betAmount = ethers.parseEther('0.0001') // Smaller amount for testing on Base Sepolia
 
 	if (bettor1Balance < betAmount || bettor2Balance < betAmount) {
 		console.log('  ⚠️  Insufficient balance for betting. Skipping bet placement.')
-		console.log('  💡 Get testnet CELO from: https://faucet.celo.org/alfajores\n')
+		console.log('  💡 Get testnet ETH for Base Sepolia from a faucet.\n')
 	} else {
 		try {
 			const gameweek = 1
@@ -87,7 +97,7 @@ async function main() {
 			const receipt1 = await tx1.wait()
 			console.log('  ✅ Bet placed! Tx:', receipt1?.hash)
 			const bet1 = await predictionContract.getBet(0)
-			console.log('  Bet ID: 0, Amount:', ethers.formatEther(bet1.amount), 'CELO')
+			console.log('  Bet ID: 0, Amount:', ethers.formatEther(bet1.amount), 'ETH')
 
 			// Bettor 2 places bet on AWAY
 			console.log('  Bettor 2 placing bet on AWAY...')
@@ -95,10 +105,10 @@ async function main() {
 			const receipt2 = await tx2.wait()
 			console.log('  ✅ Bet placed! Tx:', receipt2?.hash)
 			const bet2 = await predictionContract.getBet(1)
-			console.log('  Bet ID: 1, Amount:', ethers.formatEther(bet2.amount), 'CELO')
+			console.log('  Bet ID: 1, Amount:', ethers.formatEther(bet2.amount), 'ETH')
 
 			const contractBalance = await predictionContract.getBalance()
-			console.log('  Contract balance:', ethers.formatEther(contractBalance), 'CELO')
+			console.log('  Contract balance:', ethers.formatEther(contractBalance), 'ETH')
 			console.log('✅ Bet placement complete\n')
 		} catch (error: any) {
 			console.log('  ❌ Error placing bets:', error.message)

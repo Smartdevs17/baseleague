@@ -1,4 +1,4 @@
-import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt, useWatchContractEvent, useBalance } from 'wagmi'
+import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt, useWatchContractEvent, useBalance, usePublicClient } from 'wagmi'
 import { parseEther, formatEther } from 'viem'
 import { CONTRACTS, ABIS, Prediction, MatchOutcome, Bet } from '@/lib/contracts'
 import { toast } from 'sonner'
@@ -61,10 +61,79 @@ export const useResultsConsumer = () => {
 		})
 	}
 
+	// Check if current user is the owner of ResultsConsumer
+	const ownerAddress = useReadContract({
+		address: CONTRACTS.RESULTS_CONSUMER,
+		abi: ABIS.RESULTS_CONSUMER,
+		functionName: 'owner',
+		query: {
+			enabled: isConnected,
+		},
+	})
+
+	// Set result manually via backend API (fallback when Chainlink fails)
+	const setResultManually = async (
+		gameweek: number,
+		matchId: number,
+		homeScore: number,
+		awayScore: number,
+		status: string
+	) => {
+		if (!isConnected) {
+			toast.error('Please connect your wallet')
+			return
+		}
+
+		try {
+			const apiBaseUrl = import.meta.env.DEV
+				? import.meta.env.VITE_API_BASE_URL || 'http://localhost:3002'
+				: import.meta.env.VITE_API_BASE_URL || window.location.origin
+
+			const response = await fetch(`${apiBaseUrl}/api/set-result-manually`, {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+				},
+				body: JSON.stringify({
+					gameweek,
+					matchId,
+					homeScore,
+					awayScore,
+					status,
+				}),
+			})
+
+			const data = await response.json()
+
+			if (!response.ok || !data.success) {
+				throw new Error(data.error || 'Failed to set result manually')
+			}
+
+			toast.success('Result set successfully!', {
+				description: `Gameweek ${gameweek}, Match ${matchId}: ${homeScore} - ${awayScore}`,
+				action: data.transactionHash
+					? {
+							label: 'View on Explorer',
+							onClick: () => window.open(getExplorerUrl(data.transactionHash), '_blank'),
+						}
+					: undefined,
+			})
+
+			return data
+		} catch (err: any) {
+			toast.error('Failed to set result manually', {
+				description: err.message || 'An error occurred',
+			})
+			throw err
+		}
+	}
+
 	return {
 		requestResult,
 		hasOutcome,
 		getOutcome,
+		setResultManually,
+		ownerAddress,
 		isPending,
 		isConfirming,
 		isConfirmed,
@@ -76,6 +145,7 @@ export const useResultsConsumer = () => {
 	// Hook for PredictionContract
 	export const usePredictionContract = () => {
 		const { address, isConnected } = useAccount()
+		const publicClient = usePublicClient()
 		const { writeContract, data: hash, isPending, error } = useWriteContract()
 		const { isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({
 			hash,
@@ -144,16 +214,16 @@ export const useResultsConsumer = () => {
 			})
 			
 			// Call writeContract - this will open MetaMask
-			// The promise might resolve immediately, hash appears in hook state
-			let writeContractPromise: Promise<`0x${string}` | undefined>
+			// In Wagmi v2, writeContract doesn't return a promise
+			// The hash appears in the hook state after user confirms
 			try {
-				writeContractPromise = writeContract({
+				writeContract({
 					address: CONTRACTS.PREDICTION_CONTRACT,
 					abi: ABIS.PREDICTION_CONTRACT,
 					functionName: 'placeBet',
 					args: [BigInt(gameweek), BigInt(matchId), BigInt(prediction)],
 					value: amountWei, // Send ETH with the transaction
-				}) as Promise<`0x${string}` | undefined>
+				})
 			} catch (callError: any) {
 				// Immediate error (before MetaMask opens)
 				const errorMessage = callError?.message || String(callError) || ''
@@ -164,73 +234,21 @@ export const useResultsConsumer = () => {
 				throw callError
 			}
 			
-			// Wait for either:
-			// 1. Promise to resolve (might return hash or undefined)
-			// 2. Hash to appear in hook state
-			// 3. User rejection error
+			// Wait for hash to appear in hook state
+			// In Wagmi v2, writeContract triggers the transaction and hash appears in hook state
 			const maxWait = 60000 // 60 seconds - give user time to sign
 			const interval = 300 // Check every 300ms
 			let elapsed = 0
-			let promiseResolved = false
-			let promiseResult: `0x${string}` | undefined = undefined
-			let promiseError: any = null
 			
-			// Start waiting for promise (in case it resolves or rejects)
-			// Note: In Wagmi v2, the promise might not resolve with hash immediately
-			// The hash usually appears in hook state after user confirms
-			writeContractPromise
-				.then((result) => {
-					promiseResolved = true
-					promiseResult = result
-					console.log('✅ [placeBet] writeContract promise resolved:', result)
-					// If promise resolved with hash, we can return it
-					// But usually hash appears in hook state instead
-				})
-				.catch((err) => {
-					promiseResolved = true
-					promiseError = err
-					console.log('❌ [placeBet] writeContract promise rejected:', err)
-					// This usually means user rejected or there's an error
-				})
-			
-			// Wait for hash to appear (either from promise or hook state)
+			// Wait for hash to appear in hook state
 			while (elapsed < maxWait) {
 				await new Promise(resolve => setTimeout(resolve, interval))
 				elapsed += interval
 				
-				// Check hook state for hash FIRST (this is where it usually appears)
+				// Check hook state for hash (this is where it appears in Wagmi v2)
 				if (hashRef.current) {
 					console.log('✅ [placeBet] Hash found in hook state:', hashRef.current)
 					return hashRef.current
-				}
-				
-				// Check if promise resolved with hash (less common in Wagmi v2)
-				if (promiseResolved && promiseResult) {
-					console.log('✅ [placeBet] Hash from promise:', promiseResult)
-					return promiseResult
-				}
-				
-				// Check if promise rejected (user rejection or error)
-				if (promiseResolved && promiseError) {
-					const errorMessage = promiseError?.message || String(promiseError) || ''
-					const errorCode = promiseError?.code || promiseError?.error?.code || ''
-					
-					const isUserRejection = 
-						errorCode === 4001 ||
-						errorCode === 'ACTION_REJECTED' ||
-						errorMessage.toLowerCase().includes('user rejected') ||
-						errorMessage.toLowerCase().includes('user denied') ||
-						errorMessage.toLowerCase().includes('rejected') ||
-						errorMessage.toLowerCase().includes('denied') ||
-						errorMessage.toLowerCase().includes('cancelled') ||
-						errorMessage.toLowerCase().includes('canceled')
-					
-					if (isUserRejection) {
-						throw new Error('USER_REJECTED')
-					}
-					
-					// Real error from promise
-					throw promiseError
 				}
 				
 				// Check for errors in hook state (but only if not pending)
@@ -243,7 +261,9 @@ export const useResultsConsumer = () => {
 						errorMessage.toLowerCase().includes('user rejected') ||
 						errorMessage.toLowerCase().includes('user denied') ||
 						errorMessage.toLowerCase().includes('rejected') ||
-						errorMessage.toLowerCase().includes('denied')
+						errorMessage.toLowerCase().includes('denied') ||
+						errorMessage.toLowerCase().includes('cancelled') ||
+						errorMessage.toLowerCase().includes('canceled')
 					
 					if (isUserRejection) {
 						throw new Error('USER_REJECTED')
@@ -255,7 +275,7 @@ export const useResultsConsumer = () => {
 				
 				// Log progress every 5 seconds
 				if (elapsed % 5000 === 0 && elapsed > 0) {
-					console.log(`⏳ [placeBet] Waiting for hash... (${elapsed/1000}s elapsed, isPending: ${currentIsPending}, promiseResolved: ${promiseResolved})`)
+					console.log(`⏳ [placeBet] Waiting for hash... (${elapsed/1000}s elapsed, isPending: ${currentIsPending})`)
 				}
 			}
 			
@@ -292,6 +312,27 @@ export const useResultsConsumer = () => {
 		}
 
 		try {
+			// First check if outcome exists
+			if (publicClient) {
+				try {
+					const hasOutcome = await publicClient.readContract({
+						address: CONTRACTS.RESULTS_CONSUMER,
+						abi: ABIS.RESULTS_CONSUMER,
+						functionName: 'hasOutcome',
+						args: [BigInt(gameweek), BigInt(matchId)],
+					})
+					
+					if (!hasOutcome) {
+						toast.error('Match result not available', {
+							description: 'The match result must be fetched from Chainlink Functions first. Please request the result before settling.',
+						})
+						return
+					}
+				} catch (checkErr) {
+					console.warn('Could not check outcome status:', checkErr)
+				}
+			}
+
 			const txHash = await writeContract({
 				address: CONTRACTS.PREDICTION_CONTRACT,
 				abi: ABIS.PREDICTION_CONTRACT,
@@ -306,7 +347,27 @@ export const useResultsConsumer = () => {
 			})
 			return txHash
 		} catch (err: any) {
-			toast.error(err?.message || 'Failed to settle match')
+			// Parse error message for better user feedback
+			let errorMessage = err?.message || 'Failed to settle match'
+			
+			// Check for specific revert reasons
+			if (errorMessage.includes('MatchNotFulfilled')) {
+				errorMessage = 'Match result not available. Please request the result from Chainlink Functions first.'
+			} else if (errorMessage.includes('MatchAlreadySettled')) {
+				errorMessage = 'This match has already been settled.'
+			} else if (errorMessage.includes('revert') || errorMessage.includes('execution reverted')) {
+				// Try to extract the actual revert reason
+				const revertMatch = errorMessage.match(/revert\s+(.+)/i) || errorMessage.match(/execution reverted:\s*(.+)/i)
+				if (revertMatch && revertMatch[1]) {
+					errorMessage = `Transaction reverted: ${revertMatch[1]}`
+				} else {
+					errorMessage = 'Transaction reverted. The match result may not be available yet. Please check if the outcome exists in ResultsConsumer.'
+				}
+			}
+			
+			toast.error('Failed to settle match', {
+				description: errorMessage,
+			})
 			throw err
 		}
 	}
@@ -337,9 +398,43 @@ export const useResultsConsumer = () => {
 		})
 	}
 
+	// Withdraw platform fees (owner only)
+	const withdrawFees = async (amount?: string) => {
+		if (!isConnected) {
+			toast.error('Please connect your wallet')
+			return
+		}
+
+		try {
+			const amountWei = amount ? parseEther(amount) : 0n
+
+			const txHash = await writeContract({
+				address: CONTRACTS.PREDICTION_CONTRACT,
+				abi: ABIS.PREDICTION_CONTRACT,
+				functionName: 'withdrawFees',
+				args: [amountWei],
+			})
+
+			toast.success(amount ? `Withdrawing ${amount} ETH...` : 'Withdrawing all fees...', {
+				action: txHash ? {
+					label: 'View on Explorer',
+					onClick: () => window.open(getExplorerUrl(txHash), '_blank'),
+				} : undefined,
+			})
+			return txHash
+		} catch (err: any) {
+			const errorMessage = err?.message || 'Failed to withdraw fees'
+			toast.error('Failed to withdraw fees', {
+				description: errorMessage,
+			})
+			throw err
+		}
+	}
+
 	return {
 		placeBet,
 		settleMatch,
+		withdrawFees,
 		getBet,
 		getTotalBets,
 		isPending,

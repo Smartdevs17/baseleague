@@ -6,11 +6,14 @@
 	"main": "server.js",
 	"scripts": {
 		"start": "node server.js",
-		"dev": "node --watch server.js"
+		"dev": "node --watch server.js",
+		"test:cron": "curl -X POST http://localhost:3002/api/cron/process-matches"
 	},
 	"dependencies": {
 		"express": "^4.18.2",
-		"cors": "^2.8.5"
+		"cors": "^2.8.5",
+		"ethers": "^6.13.0",
+		"dotenv": "^16.4.5",
+		"node-cron": "^3.0.3"
 	}
 }
-

@@ -23,6 +23,7 @@ export interface Match {
   creatorPrediction: 'home' | 'draw' | 'away';
   joinerPrediction?: 'home' | 'draw' | 'away';
   settled: boolean;
+  awaitingSettlement?: boolean;
   winner?: string;
   status: 'open' | 'active' | 'completed';
   createdAt: number;

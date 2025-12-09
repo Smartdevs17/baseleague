@@ -6,6 +6,9 @@ pnpm-lock.yaml
 
 # Environment variables
 .env
+backend/.env
+client/.env
+contracts/.env
 .env.local
 .env.*.local
 .env.development
