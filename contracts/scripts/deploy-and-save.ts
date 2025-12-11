@@ -6,19 +6,8 @@ import * as path from 'path'
 dotenv.config()
 
 async function main() {
-	const networkName = process.env.HARDHAT_NETWORK || 'base-sepolia'
-	let networkDisplay = 'Unknown'
-	if (networkName === 'base-sepolia') {
-		networkDisplay = 'Base Sepolia'
-	} else if (networkName === 'sepolia') {
-		networkDisplay = 'Ethereum Sepolia'
-	} else if (networkName === 'celo-alfajores') {
-		networkDisplay = 'Celo Alfajores'
-	} else if (networkName === 'celo-sepolia') {
-		networkDisplay = 'Celo Sepolia'
-	} else {
-		networkDisplay = networkName
-	}
+const networkName = process.env.HARDHAT_NETWORK || 'base-sepolia'
+const networkDisplay = networkName === 'base-sepolia' ? 'Base Sepolia' : networkName
 	
 	console.log(`🚀 Starting deployment to ${networkDisplay}...\n`)
 
@@ -30,16 +19,12 @@ async function main() {
 	const [deployer] = await ethers.getSigners()
 	console.log('Deployer:', deployer.address)
 	const balance = await ethers.provider.getBalance(deployer.address)
-	const currency = networkName === 'base-sepolia' ? 'ETH' : 'CELO'
+	const currency = 'ETH'
 	console.log('Balance:', ethers.formatEther(balance), currency + '\n')
 
 	if (balance < ethers.parseEther('0.01')) {
 		console.log(`⚠️  Warning: Low balance. You may need more ${currency} for deployment.`)
-		if (networkName === 'base-sepolia') {
-			console.log('💡 Get testnet ETH from: https://www.coinbase.com/faucets/base-ethereum-goerli-faucet\n')
-		} else {
-			console.log('💡 Get testnet CELO from: https://faucet.celo.org/alfajores\n')
-		}
+		console.log('💡 Get testnet ETH from: https://www.coinbase.com/faucets/base-ethereum-goerli-faucet\n')
 	}
 
 	// Get configuration from environment variables
@@ -94,6 +79,7 @@ async function main() {
 	// Save addresses to .env file
 	console.log('\n💾 Saving addresses to .env file...')
 	const envPath = path.join(__dirname, '..', '.env')
+	const envExamplePath = path.join(__dirname, '..', '.env.example')
 	let envContent = fs.existsSync(envPath) ? fs.readFileSync(envPath, 'utf-8') : ''
 
 	// Update or add contract addresses
@@ -122,7 +108,8 @@ async function main() {
 	}
 
 	fs.writeFileSync(envPath, newLines.join('\n'))
-	console.log('✅ Addresses saved to .env')
+	fs.writeFileSync(envExamplePath, newLines.join('\n'))
+	console.log('✅ Addresses saved to .env and .env.example')
 
 	// Print summary
 	console.log('\n' + '='.repeat(60))
@@ -139,16 +126,8 @@ async function main() {
 	console.log('3. Test the contracts:')
 	console.log('   npm run test:live')
 	console.log('\n🔗 View on Explorer:')
-	if (networkName === 'base-sepolia') {
-		console.log(`   ResultsConsumer: https://sepolia.basescan.org/address/${resultsConsumerAddress}`)
-		console.log(`   PredictionContract: https://sepolia.basescan.org/address/${predictionContractAddress}`)
-	} else if (networkName === 'sepolia') {
-		console.log(`   ResultsConsumer: https://sepolia.etherscan.io/address/${resultsConsumerAddress}`)
-		console.log(`   PredictionContract: https://sepolia.etherscan.io/address/${predictionContractAddress}`)
-	} else {
-		console.log(`   ResultsConsumer: https://alfajores.celoscan.io/address/${resultsConsumerAddress}`)
-		console.log(`   PredictionContract: https://alfajores.celoscan.io/address/${predictionContractAddress}`)
-	}
+	console.log(`   ResultsConsumer: https://sepolia.basescan.org/address/${resultsConsumerAddress}`)
+	console.log(`   PredictionContract: https://sepolia.basescan.org/address/${predictionContractAddress}`)
 	console.log('')
 }
 

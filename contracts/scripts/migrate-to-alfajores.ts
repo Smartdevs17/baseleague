@@ -27,7 +27,7 @@ async function main() {
 
 	if (balance < ethers.parseEther('0.01')) {
 		console.log('⚠️  Warning: Low balance. You may need more CELO for deployment.')
-		console.log('💡 Get testnet CELO from: https://faucet.celo.org/alfajores\n')
+		console.log('💡 Get testnet BASE from: 	https://base-faucet.com/\n')
 	}
 
 	// Get configuration from environment variables
@@ -40,7 +40,7 @@ async function main() {
 			'  - CHAINLINK_FUNCTIONS_ROUTER_ALFAJORES (or CHAINLINK_FUNCTIONS_ROUTER)\n' +
 			'  - CHAINLINK_FUNCTIONS_DON_ID_ALFAJORES (or CHAINLINK_FUNCTIONS_DON_ID)\n\n' +
 			'💡 Get these from: https://docs.chain.link/chainlink-functions/supported-networks\n' +
-			'   Look for "Celo Alfajores" section'
+			'   Look for "Base Sepolia" section'
 		)
 	}
 

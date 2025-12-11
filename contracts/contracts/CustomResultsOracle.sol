@@ -5,9 +5,9 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 
 /**
  * @title CustomResultsOracle
- * @notice Custom oracle for setting match results on Celo Sepolia
+ * @notice Custom oracle for setting match results on Base Sepolia
  * @dev This contract allows authorized oracles to submit match results
- *      Since Chainlink Functions doesn't support Celo Sepolia, we use a custom oracle solution
+ *      Since Chainlink Functions doesn't support Base Sepolia, we use a custom oracle solution
  */
 contract CustomResultsOracle is Ownable {
 	// Access control - authorized oracles that can submit results
