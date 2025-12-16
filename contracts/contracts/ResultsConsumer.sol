@@ -15,7 +15,7 @@ contract ResultsConsumer is FunctionsClient, ConfirmedOwner {
 	using FunctionsRequest for FunctionsRequest.Request;
 
 	// Chainlink Functions configuration
-	bytes32 public s_donId; // DON ID for Celo Sepolia Testnet
+	bytes32 public s_donId; // DON ID for Base Sepolia Testnet
 	uint64 public s_subscriptionId; // Subscription ID for funding requests
 	uint32 public s_callbackGasLimit; // Gas limit for callback execution
 	uint16 public s_requestConfirmations; // Number of confirmations required
